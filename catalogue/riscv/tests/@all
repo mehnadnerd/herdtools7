@@ -1,0 +1,23 @@
+# _build/install/default/bin/diycross7 -arch RISCV Pod**,Fenced** Rfe,Fre,Wse Pod**,Fenced** Rfe,Fre,Wse
+# Version 7.56+02~dev, Revision: 206a67ec22b045ef32001b73d4597cb6197e4180
+MP.litmus
+MP+po+fence.rw.rw.litmus
+S.litmus
+S+po+fence.rw.rw.litmus
+LB.litmus
+LB+fence.rw.rw+po.litmus
+MP+fence.rw.rw+po.litmus
+MP+fence.rw.rws.litmus
+S+fence.rw.rw+po.litmus
+S+fence.rw.rws.litmus
+LB+fence.rw.rws.litmus
+SB.litmus
+SB+fence.rw.rw+po.litmus
+R.litmus
+R+fence.rw.rw+po.litmus
+SB+fence.rw.rws.litmus
+R+po+fence.rw.rw.litmus
+R+fence.rw.rws.litmus
+2+2W.litmus
+2+2W+fence.rw.rw+po.litmus
+2+2W+fence.rw.rws.litmus
