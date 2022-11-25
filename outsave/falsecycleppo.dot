@@ -1,0 +1,220 @@
+digraph G {
+
+
+/* legend */
+label="Test lw.aq, Generic(Risc V partial order model)";
+
+
+/* init events */
+eiid7 [label="h: W[z]=0\lInit", shape="box", color="blue"];
+eiid8 [label="i: W[y]=0\lInit", shape="box", color="blue"];
+eiid9 [label="j: W[x]=0\lInit", shape="box", color="blue"];
+eiid10 [label="k: W[w]=0\lInit", shape="box", color="blue"];
+
+/* the unlocked events */
+subgraph cluster_proc0 { rank=sink; label = "Thread 0"; color=magenta; shape=box;
+eiid0 [label="a: W[x]=1\lproc:P0 poi:3\lsw x3,0(x1)", shape="box", color="blue"];
+eiid16 [label="q: F rw,w\lproc:P0 poi:4\lfence rw,w", shape="box", color="blue"];
+eiid1 [label="b: W[y]=1\lproc:P0 poi:5\lsw x4,0(x2)", shape="box", color="blue"];
+eiid2 [label="c: W[w]=1\lproc:P0 poi:6\lsw x7,0(x5)", shape="box", color="blue"];
+}
+subgraph cluster_proc1 { rank=sink; label = "Thread 1"; color=magenta; shape=box;
+eiid3 [label="d: R[y]=0\lproc:P1 poi:0\llw x3,0(x2)", shape="box", color="blue"];
+eiid23 [label="x: F r,rw\lproc:P1 poi:1\lfence r,rw", shape="box", color="blue"];
+eiid4 [label="e: R[x]=0\lproc:P1 poi:2\llw x4,0(x1)", shape="box", color="blue"];
+}
+subgraph cluster_proc2 { rank=sink; label = "Thread 2"; color=magenta; shape=box;
+eiid5 [label="f: R[w]=1\lproc:P2 poi:0\llw x7,0(x5)", shape="box", color="blue"];
+eiid28 [label="ev28: F rw,rw\lproc:P2 poi:1\lfence rw,rw", shape="box", color="blue"];
+eiid6 [label="g: R[x]=0\lproc:P2 poi:2\llw x3,0(x1)", shape="box", color="blue"];
+}
+
+/* the intra_causality_data edges */
+
+
+/* the intra_causality_control edges */
+
+/* the poi edges */
+/* the rfmap edges */
+eiid8 -> eiid3 [label="rf", color="red", fontcolor="red"];
+eiid9 -> eiid4 [label="rf", color="red", fontcolor="red"];
+eiid2 -> eiid5 [label="rf", color="red", fontcolor="red"];
+eiid9 -> eiid6 [label="rf", color="red", fontcolor="red"];
+
+
+/* The viewed-before edges */
+eiid0 -> eiid1 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid0 -> eiid2 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid3 -> eiid4 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid5 -> eiid6 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid3 -> eiid1 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid4 -> eiid0 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid6 -> eiid0 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid8 -> eiid1 [label="co", color="blue", fontcolor="blue"];
+eiid9 -> eiid0 [label="co", color="blue", fontcolor="blue"];
+eiid10 -> eiid2 [label="co", color="blue", fontcolor="blue"];
+}
+digraph G {
+
+
+/* legend */
+label="Test lw.aq, Generic(Risc V partial order model)";
+
+
+/* init events */
+eiid7 [label="h: W[z]=0\lInit", shape="box", color="blue"];
+eiid8 [label="i: W[y]=0\lInit", shape="box", color="blue"];
+eiid9 [label="j: W[x]=0\lInit", shape="box", color="blue"];
+eiid10 [label="k: W[w]=0\lInit", shape="box", color="blue"];
+
+/* the unlocked events */
+subgraph cluster_proc0 { rank=sink; label = "Thread 0"; color=magenta; shape=box;
+eiid0 [label="a: W[x]=1\lproc:P0 poi:3\lsw x3,0(x1)", shape="box", color="blue"];
+eiid16 [label="q: F rw,w\lproc:P0 poi:4\lfence rw,w", shape="box", color="blue"];
+eiid1 [label="b: W[y]=1\lproc:P0 poi:5\lsw x4,0(x2)", shape="box", color="blue"];
+eiid2 [label="c: W[w]=1\lproc:P0 poi:6\lsw x7,0(x5)", shape="box", color="blue"];
+}
+subgraph cluster_proc1 { rank=sink; label = "Thread 1"; color=magenta; shape=box;
+eiid3 [label="d: R[y]=0\lproc:P1 poi:0\llw x3,0(x2)", shape="box", color="blue"];
+eiid23 [label="x: F r,rw\lproc:P1 poi:1\lfence r,rw", shape="box", color="blue"];
+eiid4 [label="e: R[x]=1\lproc:P1 poi:2\llw x4,0(x1)", shape="box", color="blue"];
+}
+subgraph cluster_proc2 { rank=sink; label = "Thread 2"; color=magenta; shape=box;
+eiid5 [label="f: R[w]=1\lproc:P2 poi:0\llw x7,0(x5)", shape="box", color="blue"];
+eiid28 [label="ev28: F rw,rw\lproc:P2 poi:1\lfence rw,rw", shape="box", color="blue"];
+eiid6 [label="g: R[x]=0\lproc:P2 poi:2\llw x3,0(x1)", shape="box", color="blue"];
+}
+
+/* the intra_causality_data edges */
+
+
+/* the intra_causality_control edges */
+
+/* the poi edges */
+/* the rfmap edges */
+eiid8 -> eiid3 [label="rf", color="red", fontcolor="red"];
+eiid0 -> eiid4 [label="rf", color="red", fontcolor="red"];
+eiid2 -> eiid5 [label="rf", color="red", fontcolor="red"];
+eiid9 -> eiid6 [label="rf", color="red", fontcolor="red"];
+
+
+/* The viewed-before edges */
+eiid0 -> eiid1 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid0 -> eiid2 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid3 -> eiid4 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid5 -> eiid6 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid3 -> eiid1 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid6 -> eiid0 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid8 -> eiid1 [label="co", color="blue", fontcolor="blue"];
+eiid9 -> eiid0 [label="co", color="blue", fontcolor="blue"];
+eiid10 -> eiid2 [label="co", color="blue", fontcolor="blue"];
+}
+digraph G {
+
+
+/* legend */
+label="Test lw.aq, Generic(Risc V partial order model)";
+
+
+/* init events */
+eiid7 [label="h: W[z]=0\lInit", shape="box", color="blue"];
+eiid8 [label="i: W[y]=0\lInit", shape="box", color="blue"];
+eiid9 [label="j: W[x]=0\lInit", shape="box", color="blue"];
+eiid10 [label="k: W[w]=0\lInit", shape="box", color="blue"];
+
+/* the unlocked events */
+subgraph cluster_proc0 { rank=sink; label = "Thread 0"; color=magenta; shape=box;
+eiid0 [label="a: W[x]=1\lproc:P0 poi:3\lsw x3,0(x1)", shape="box", color="blue"];
+eiid16 [label="q: F rw,w\lproc:P0 poi:4\lfence rw,w", shape="box", color="blue"];
+eiid1 [label="b: W[y]=1\lproc:P0 poi:5\lsw x4,0(x2)", shape="box", color="blue"];
+eiid2 [label="c: W[w]=1\lproc:P0 poi:6\lsw x7,0(x5)", shape="box", color="blue"];
+}
+subgraph cluster_proc1 { rank=sink; label = "Thread 1"; color=magenta; shape=box;
+eiid3 [label="d: R[y]=1\lproc:P1 poi:0\llw x3,0(x2)", shape="box", color="blue"];
+eiid23 [label="x: F r,rw\lproc:P1 poi:1\lfence r,rw", shape="box", color="blue"];
+eiid4 [label="e: R[x]=0\lproc:P1 poi:2\llw x4,0(x1)", shape="box", color="blue"];
+}
+subgraph cluster_proc2 { rank=sink; label = "Thread 2"; color=magenta; shape=box;
+eiid5 [label="f: R[w]=1\lproc:P2 poi:0\llw x7,0(x5)", shape="box", color="blue"];
+eiid28 [label="ev28: F rw,rw\lproc:P2 poi:1\lfence rw,rw", shape="box", color="blue"];
+eiid6 [label="g: R[x]=0\lproc:P2 poi:2\llw x3,0(x1)", shape="box", color="blue"];
+}
+
+/* the intra_causality_data edges */
+
+
+/* the intra_causality_control edges */
+
+/* the poi edges */
+/* the rfmap edges */
+eiid1 -> eiid3 [label="rf", color="red", fontcolor="red"];
+eiid9 -> eiid4 [label="rf", color="red", fontcolor="red"];
+eiid2 -> eiid5 [label="rf", color="red", fontcolor="red"];
+eiid9 -> eiid6 [label="rf", color="red", fontcolor="red"];
+
+
+/* The viewed-before edges */
+eiid0 -> eiid1 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid0 -> eiid2 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid3 -> eiid4 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid5 -> eiid6 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid4 -> eiid0 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid6 -> eiid0 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid8 -> eiid1 [label="co", color="blue", fontcolor="blue"];
+eiid9 -> eiid0 [label="co", color="blue", fontcolor="blue"];
+eiid10 -> eiid2 [label="co", color="blue", fontcolor="blue"];
+}
+digraph G {
+
+
+/* legend */
+label="Test lw.aq, Generic(Risc V partial order model)";
+
+
+/* init events */
+eiid7 [label="h: W[z]=0\lInit", shape="box", color="blue"];
+eiid8 [label="i: W[y]=0\lInit", shape="box", color="blue"];
+eiid9 [label="j: W[x]=0\lInit", shape="box", color="blue"];
+eiid10 [label="k: W[w]=0\lInit", shape="box", color="blue"];
+
+/* the unlocked events */
+subgraph cluster_proc0 { rank=sink; label = "Thread 0"; color=magenta; shape=box;
+eiid0 [label="a: W[x]=1\lproc:P0 poi:3\lsw x3,0(x1)", shape="box", color="blue"];
+eiid16 [label="q: F rw,w\lproc:P0 poi:4\lfence rw,w", shape="box", color="blue"];
+eiid1 [label="b: W[y]=1\lproc:P0 poi:5\lsw x4,0(x2)", shape="box", color="blue"];
+eiid2 [label="c: W[w]=1\lproc:P0 poi:6\lsw x7,0(x5)", shape="box", color="blue"];
+}
+subgraph cluster_proc1 { rank=sink; label = "Thread 1"; color=magenta; shape=box;
+eiid3 [label="d: R[y]=1\lproc:P1 poi:0\llw x3,0(x2)", shape="box", color="blue"];
+eiid23 [label="x: F r,rw\lproc:P1 poi:1\lfence r,rw", shape="box", color="blue"];
+eiid4 [label="e: R[x]=1\lproc:P1 poi:2\llw x4,0(x1)", shape="box", color="blue"];
+}
+subgraph cluster_proc2 { rank=sink; label = "Thread 2"; color=magenta; shape=box;
+eiid5 [label="f: R[w]=1\lproc:P2 poi:0\llw x7,0(x5)", shape="box", color="blue"];
+eiid28 [label="ev28: F rw,rw\lproc:P2 poi:1\lfence rw,rw", shape="box", color="blue"];
+eiid6 [label="g: R[x]=0\lproc:P2 poi:2\llw x3,0(x1)", shape="box", color="blue"];
+}
+
+/* the intra_causality_data edges */
+
+
+/* the intra_causality_control edges */
+
+/* the poi edges */
+/* the rfmap edges */
+eiid1 -> eiid3 [label="rf", color="red", fontcolor="red"];
+eiid0 -> eiid4 [label="rf", color="red", fontcolor="red"];
+eiid2 -> eiid5 [label="rf", color="red", fontcolor="red"];
+eiid9 -> eiid6 [label="rf", color="red", fontcolor="red"];
+
+
+/* The viewed-before edges */
+eiid0 -> eiid1 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid0 -> eiid2 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid3 -> eiid4 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid5 -> eiid6 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid6 -> eiid0 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid8 -> eiid1 [label="co", color="blue", fontcolor="blue"];
+eiid9 -> eiid0 [label="co", color="blue", fontcolor="blue"];
+eiid10 -> eiid2 [label="co", color="blue", fontcolor="blue"];
+}

@@ -1,0 +1,13 @@
+RISCV lw.aq sw.rl
+Orig=PodWW Coe PodWW Coe
+{
+0:x1=x; 0:x2=y;
+1:x1=x; 1:x2=y;
+x=0; y=0;
+}
+P0                 | P1              ;
+addi x3, x0, 1     | lw    x3, 0(x2) ;
+addi x4, x0, 1     | lw    x4, 0(x1) ;
+sw x3, 0(x1)       |                 ;
+sw    x4, 0(x2)    |                 ;
+exists (1:x3=1 /\ 1:x4=0)
