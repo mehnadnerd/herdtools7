@@ -1,0 +1,39 @@
+digraph G {
+
+
+/* legend */
+label="Aq/Rl Reordering (forbidden)";
+
+
+/* init events */
+eiid4 [label="e: W[y]=0\lInit", shape="box", color="blue"];
+eiid5 [label="f: W[x]=0\lInit", shape="box", color="blue"];
+
+/* the unlocked events */
+subgraph cluster_proc0 { rank=sink; label = "Thread 0"; color=magenta; shape=box;
+eiid0 [label="a: W[x]=1\lproc:P0 poi:2\lsw x3,0(x1)", shape="box", color="blue"];
+eiid1 [label="b: W[y]Rel=1\lproc:P0 poi:3\lsw.rl x4,0(x2)", shape="box", color="blue"];
+}
+subgraph cluster_proc1 { rank=sink; label = "Thread 1"; color=magenta; shape=box;
+eiid2 [label="c: R[y]Acq=1\lproc:P1 poi:0\llw.aq x3,0(x2)", shape="box", color="blue"];
+eiid3 [label="d: R[x]=0\lproc:P1 poi:1\llw x4,0(x1)", shape="box", color="blue"];
+}
+
+/* the intra_causality_data edges */
+
+
+/* the intra_causality_control edges */
+
+/* the poi edges */
+/* the rfmap edges */
+eiid1 -> eiid2 [label="rf", color="red", fontcolor="red"];
+eiid5 -> eiid3 [label="rf", color="red", fontcolor="red"];
+
+
+/* The viewed-before edges */
+eiid0 -> eiid1 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid2 -> eiid3 [label="ppo", color="indigo", fontcolor="indigo"];
+eiid3 -> eiid0 [label="fr", color="#ffa040", fontcolor="#ffa040"];
+eiid4 -> eiid1 [label="co", color="blue", fontcolor="blue"];
+eiid5 -> eiid0 [label="co", color="blue", fontcolor="blue"];
+}

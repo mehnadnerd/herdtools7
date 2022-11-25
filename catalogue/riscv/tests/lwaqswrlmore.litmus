@@ -1,0 +1,17 @@
+RISCV lw.aq sw.rl smart allowed
+{
+0:x1=x; 0:x2=y; 0:x5=w; 0:x6=z;
+1:x1=x; 1:x2=y; 1:x5=w; 1:x6=z;
+2:x1=x; 2:x2=y; 2:x5=w; 2:x6=z;
+x=0; y=0; w=0; z=0;
+}
+P0                 | P1              | P2 ;
+addi x3, x0, 1     | lw.aq x3, 0(x2) | ;
+addi x7, x0, 1     |                 | ;
+addi x4, x0, 1     | lw    x4, 0(x1) | ;
+sw    x3, 0(x1)    |                 | ;
+sw.rl  x4, 0(x2)   |                 | ;
+sw    x7, 0(x5)    |                 | lw x7, 0(x5) ;
+                   |                 | fence rw, rw ;
+                   |                 | lw x3, 0(x1) ;
+exists (2:x3=0 /\ 2:x7=1)
