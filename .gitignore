@@ -12,3 +12,4 @@ catIncludes.ml
 herdtools7.install
 jerd.byte
 jerd.js
+out/
