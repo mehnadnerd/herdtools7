@@ -296,10 +296,10 @@ module
               (fun (v1,v2) -> M.op (tr_opw op) v1 v2) >>=
               (fun v -> write_reg r1 v ii) >>= B.next1T
           | RISCV.Czero (op,r1,r2,r3) ->
-              (read_reg_ord r3 ii >>| M.unitT V.zero) >>= (fun (v1,v2) -> M.op (tr_czero op) v1 v2) >>*= fun v ->
+              (read_reg_ord r3 ii >>| M.unitT V.zero) >>= (fun (v1,v2) -> M.op (tr_czero op) v1 v2) >>= fun v ->
                 (M.choiceT v
-                  (M.unitT V.zero     >>= fun v -> write_reg r1 v ii)
-                  (read_reg_ord r2 ii >>= fun v -> write_reg r1 v ii)) >>= B.next1T
+                  ((read_reg_ord r2 ii >>| M.unitT V.zero) >>= fun (v1,v2) -> write_reg r1 v2 ii)
+                  ((read_reg_ord r2 ii >>| M.unitT V.zero) >>= fun (v1,v2) -> write_reg r1 v1 ii)) >>= B.next1T
           | RISCV.J lbl -> B.branchT lbl
           | RISCV.Bcc (cond,r1,r2,lbl) ->
               (read_reg_ord r1 ii >>| read_reg_ord r2 ii) >>=
