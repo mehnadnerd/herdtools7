@@ -1,0 +1,15 @@
+RISCV Zicond allow launder
+{
+0:x1=x; 0:x2=y; 0:x3=1;
+1:x1=x; 1:x2=y; 1:x3=2; 1:x7=z;
+x=0; y=0;
+}
+P0                 | P1                   ;
+sw x3, 0(x1)       | lw    x4, 0(x2)      ;
+fence rw,rw        | czero.eqz x5, x2, x4 ;
+sw x3, 0(x2)       | xor x5, x5, x5       ;
+                   | add x1, x5, x1       ;
+                   | sw  x1, 0(x7)        ;
+                   | lw  x1, 0(x7)        ;
+                   | lw  x3, 0(x1)        ;
+exists (1:x4=1 /\ 1:x3=0)

@@ -24,3 +24,7 @@ asllib/doc/*.toc
 asllib/doc/*.fls
 asllib/doc/*.fdb_latexmk
 out/
+outaarch/
+outsave/
+run*.sh
+notes.txt

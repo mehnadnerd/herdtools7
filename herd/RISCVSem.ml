@@ -106,6 +106,10 @@ module
       | RISCV.GE -> Op.Ge
       | RISCV.LTU|RISCV.GEU ->  unimplemented (RISCV.pp_bcc cond)
 
+      let tr_czero op = match op with
+      | RISCV.EQZ -> Op.Eq
+      | RISCV.NEZ -> Op.Ne
+
       let mk_read sz ato loc v =
         let ac = Act.access_of_location_std loc in
         Act.Access (Dir.R, loc, v, ato, (), sz, ac)
@@ -120,6 +124,7 @@ module
 
       let read_reg_ord = read_reg false
       let read_reg_data = read_reg true
+      (* What is the difference here between read_reg_ord and read_reg_data? Is this addr v data dep? *)
 
       let read_mem_annot sz an a ii =
         if mixed then
@@ -251,6 +256,9 @@ module
             amo an
 
 (* Entry point *)
+(* reads r2, which is rs1 here *)
+(* V.intToV k is converting the immediate into a value *)
+(* B.next1T is goto next instruction I think *)
       let tr_sz = RISCV.tr_width
 
       let build_semantics _ ii =
@@ -287,7 +295,11 @@ module
               (read_reg_ord r2 ii >>|  read_reg_ord r3 ii) >>=
               (fun (v1,v2) -> M.op (tr_opw op) v1 v2) >>=
               (fun v -> write_reg r1 v ii) >>= B.next1T
-
+          | RISCV.Czero (op,r1,r2,r3) ->
+              (read_reg_ord r3 ii >>| M.unitT V.zero) >>= (fun (v1,v2) -> M.op (tr_czero op) v1 v2) >>*= fun v ->
+                (M.choiceT v
+                  (M.unitT V.zero     >>= fun v -> write_reg r1 v ii)
+                  (read_reg_ord r2 ii >>= fun v -> write_reg r1 v ii)) >>= B.next1T
           | RISCV.J lbl -> B.branchT lbl
           | RISCV.Bcc (cond,r1,r2,lbl) ->
               (read_reg_ord r1 ii >>| read_reg_ord r2 ii) >>=

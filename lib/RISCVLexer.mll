@@ -67,6 +67,9 @@ open RISCVParser
     | "bltu" -> BCC LTU
     | "bge" -> BCC GE
     | "bgeu" -> BCC GEU
+(* Zicond extension *)
+    | "czero.eqz" -> CZERO EQZ
+    | "czero.nez" -> CZERO NEZ
 
     | "lb" -> LOAD (Byte,Signed,Rlx)
     | "lh" -> LOAD (Half,Signed,Rlx)
@@ -90,6 +93,17 @@ open RISCVParser
     | "lbu.aq" -> LOAD (Byte,Unsigned,Acq)
     | "lhu.aq" -> LOAD (Half,Unsigned,Acq)
     | "lwu.aq" -> LOAD (Word,Unsigned,Acq)
+    | "lb.rl" -> LOAD (Byte,Signed,Rel)
+    | "lh.rl" -> LOAD (Half,Signed,Rel)
+    | "lw.rl" -> LOAD (Word,Signed,Rel)
+    | "ld.rl" -> LOAD (Double,Signed,Rel)
+    | "lbu.rl" -> LOAD (Byte,Unsigned,Rel)
+    | "lhu.rl" -> LOAD (Half,Unsigned,Rel)
+    | "lwu.rl" -> LOAD (Word,Unsigned,Rel)
+    | "sb.aq" -> STORE (Byte,Acq)
+    | "sh.aq" -> STORE (Half,Acq)
+    | "sw.aq" -> STORE (Word,Acq)
+    | "sd.aq"   -> STORE (Double,Acq)
     | "sb.rl" -> STORE (Byte,Rel)
     | "sh.rl" -> STORE (Half,Rel)
     | "sw.rl" -> STORE (Word,Rel)

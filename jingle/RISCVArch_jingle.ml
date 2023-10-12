@@ -70,6 +70,8 @@ include Arch.MakeArch(struct
   | Amo (op,w,m,r1,r2,r3),Amo (op',w',m',r1',r2',r3')
     when op=op' && w=w' && m=m' ->
       match_3r subs r1 r2 r3 r1' r2' r3'
+  | Czero (op,r1,r2,r3),Czero(op',r1',r2',r3') when op=op' ->
+      match_3r subs r1 r2 r3 r1' r2' r3'
   | FenceIns b,FenceIns b'
     when b=b'  -> Some subs
   | _,_ -> None
@@ -144,5 +146,10 @@ include Arch.MakeArch(struct
           conv_reg r2 >> fun r2 ->
           conv_reg r3 >! fun r3 ->
           Amo (op,w,m,r1,r2,r3)
+      | Czero (op,r1,r2,r3) ->
+          conv_reg r1 >> fun r1 ->
+          conv_reg r2 >> fun r2 ->
+          conv_reg r3 >! fun r3 ->
+          Czero (op,r1,r2,r3)
       | INop|Ret|FenceIns _ as i -> unitT i
 end)

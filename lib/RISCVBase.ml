@@ -273,6 +273,12 @@ let pp_bcc = function
   | GE -> "bge"
   | GEU -> "bgeu"
 
+type czeroop = EQZ | NEZ
+
+let pp_czeroop = function
+  | EQZ -> ".eqz"
+  | NEZ -> ".nez"
+
 type width = Byte | Half | Word | Double
 
 let tr_width = function
@@ -330,6 +336,7 @@ type 'k kinstruction =
   | Amo of opamo * width * mo * reg * reg * reg
   | FenceIns of  barrier
   | Ext of signed * width * reg * reg
+  | Czero of czeroop * reg * reg * reg
 
 type instruction = int kinstruction
 type parsedInstruction = MetaConst.k kinstruction
@@ -391,6 +398,9 @@ let do_pp_instruction m = function
   | Ext (_,w,r1,r2) ->
       sprintf "%s%s %s,%s"
         "sext." (pp_width w) (pp_reg r1) (pp_reg r2)
+  | Czero (op,r1,r2,r3) ->
+      sprintf "czero%s %s,%s,(%s)"
+        (pp_czeroop op) (pp_reg r1) (pp_reg r2) (pp_reg r3)
 
 let pp_instruction m =
   do_pp_instruction
@@ -433,7 +443,7 @@ let fold_regs (f_reg,f_sreg) =
   | Store (_,_,r1,_,r2)
   | LoadReserve (_,_,r1,r2)
     -> fold_reg r1 (fold_reg r2 c)
-  | Op (_,r1,r2,r3)  | OpW (_,r1,r2,r3)
+  | Op (_,r1,r2,r3)  | OpW (_,r1,r2,r3) | Czero (_,r1,r2,r3)
   | StoreConditional (_,_,r1,r2,r3)|Amo (_,_,_,r1,r2,r3)
       -> fold_reg r1 (fold_reg r2 (fold_reg r3 c))
 
@@ -474,6 +484,8 @@ let map_regs f_reg f_symb =
       Amo (op,w,mo,map_reg r1,map_reg r2,map_reg r3)
   | Ext (s,w,r1,r2) ->
       Ext (s,w, map_reg r1, map_reg r2)
+  | Czero (op,r1,r2,r3) ->
+      Czero (op,map_reg r1,map_reg r2,map_reg r3)
 
 (* No addresses burried in ARM code *)
 let fold_addrs _f c _ins = c
@@ -488,7 +500,7 @@ let get_next = function
   | INop|Ret|OpI (_, _, _, _)|OpIW (_, _, _, _)|Op (_, _, _, _)|OpW (_, _, _, _) | OpA (_,_,_) | AUIPC (_,_)
   | OpI2 (_,_,_)
   | Load (_,_, _, _, _, _)|Store (_,_, _, _, _)|LoadReserve (_, _, _, _)
-  | StoreConditional (_, _, _, _, _)|FenceIns _|Amo _|Ext (_,_,_,_)
+  | StoreConditional (_, _, _, _, _)|FenceIns _|Amo _|Ext (_,_,_,_)|Czero (_, _, _, _)
     -> [Label.Next;]
 
 let is_valid _ = true
@@ -510,7 +522,7 @@ include Pseudo.Make
       |INop | Ret | OpA (_,_,_)
       |Load (_, _, _, _, _, _)|Store (_, _ ,_ , _, _)
       | Ext (_,_,_,_)
-      |LoadReserve (_, _, _, _)|StoreConditional (_, _, _, _, _)|Amo _|FenceIns _
+      |LoadReserve (_, _, _, _)|StoreConditional (_, _, _, _, _)|Amo _|FenceIns _|Czero (_, _, _, _)
           as keep
         -> keep
 
@@ -524,7 +536,7 @@ include Pseudo.Make
         | OpI (_, _, _, _)|OpIW (_, _, _, _)|Op (_, _, _, _)
         | OpI2 (_,_,_)
         | OpA (_,_,_) | AUIPC (_,_) | Ext (_,_,_,_)
-        | OpW (_, _, _, _)|J _|Bcc (_, _, _, _)|FenceIns _
+        | OpW (_, _, _, _)|J _|Bcc (_, _, _, _)|FenceIns _|Czero (_, _, _, _)
           -> 0
 
       let size_of_ins _ = 4
@@ -538,7 +550,7 @@ include Pseudo.Make
         |OpI (_, _, _, _)|OpIW (_, _, _, _)|Op (_, _, _, _) | AUIPC (_,_)
         | OpI2 (_,_,_)
         |OpW (_, _, _, _)|Load (_, _, _, _, _, _)|Store (_, _, _, _, _)
-        |LoadReserve (_, _, _, _)|StoreConditional (_, _, _, _, _)|Amo _|FenceIns _ | Ext (_,_,_,_)
+        |LoadReserve (_, _, _, _)|StoreConditional (_, _, _, _, _)|Amo _|FenceIns _| Ext (_,_,_,_)|Czero (_, _, _, _)
             -> k
       let map_labels f = function
         | J lbl -> J (BranchTarget.as_string_fun f lbl)
@@ -551,7 +563,7 @@ include Pseudo.Make
         | OpI2 (_,_,_)
         |OpW (_, _, _, _)|Load _|Store _| AUIPC (_,_)
         |LoadReserve (_, _, _, _) | Ext (_,_,_,_)
-        |StoreConditional (_, _, _, _, _)|Amo _|FenceIns _
+        |StoreConditional (_, _, _, _, _)|Amo _|FenceIns _|Czero (_, _, _, _)
          as ins
          -> ins
 

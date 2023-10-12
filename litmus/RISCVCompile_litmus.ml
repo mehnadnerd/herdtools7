@@ -149,7 +149,8 @@ module Make(V:Constant.S)(C:Arch_litmus.Config) =
         outputs=r1; inputs=r2r3; }::k
   | FenceIns f ->
       { empty_ins with memo = pp_barrier f;}::k
-
+  | Czero (op,r1,r2,r3) ->
+        op3regs (A.pp_czeroop op) r1 r2 r3::k
 
 
   end
