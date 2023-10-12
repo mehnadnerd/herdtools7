@@ -1,0 +1,16 @@
+RISCV S+rel+CZERO-data deny
+{
+0:x10=x; 1:x10=x;
+0:x2=y; 1:x2=y;
+1:x6=z;
+}
+P0            | P1                 ;
+li x9,  1     | lw  x1, (x2)       ;
+sw x9,(x10)   |                    ;
+fence w,w     | czero.eqz x3, x4, x1   ;
+sw x9, (x2)   | sw  x3, (x6)       ;
+              | lw  x9, (x6)       ;
+              | xor x8, x9, x9     ;
+              | addi x8,x8,2       ;
+              | sw  x8,(x10)       ;
+exists(1:x1=1 /\ x=1)

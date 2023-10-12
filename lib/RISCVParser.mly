@@ -50,6 +50,7 @@ let tr_rw = function
 %token <RISCVBase.width * RISCVBase.mo> LR
 %token <RISCVBase.width * RISCVBase.mo> SC
 %token <RISCVBase.opamo * RISCVBase.width * RISCVBase.mo> AMO
+%token <RISCVBase.czeroop> CZERO
 %token FENCE FENCEI FENCETSO AUIPC
 %token <string> META
 %token NOP RET MV
@@ -167,3 +168,5 @@ instr:
     { A.FenceIns (A.Fence (tr_rw $2,tr_rw $4)) }
 | EXT reg COMMA reg
     { let s,w = $1 in A.Ext (s,w,$2,$4) }
+| CZERO reg COMMA reg COMMA reg
+  { A.Czero ($1,$2,$4,$6) }
