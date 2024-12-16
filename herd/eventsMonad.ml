@@ -662,6 +662,68 @@ Monad type:
 
     let has_no_spec (x,y) = assert(y=None); x
 
+(* RISCV failed cas *)
+    let riscv_cas_no
+        (read_rs1:'loc t) (read_rd:'v t)
+        (write_rd:'v-> unit t)
+        (read_mem: 'loc -> 'v t)
+        (rne: 'v -> 'v -> unit t)
+        eiid =
+      let eiid,read_rs1 = read_rs1 eiid in
+      let eiid,read_rd = read_rd eiid in
+      let cv,cl_cv,es_rd = Evt.as_singleton_nospecul read_rd in
+      let acts_rs1,spec = read_rs1 in
+      assert (Misc.is_none spec) ;
+      let eiid,acts =
+        Evt.fold
+          (fun  (a,cl_a,es_rs1) (eiid,acts) ->
+            let eiid,read_mem = read_mem a eiid in
+            let ov,cl_rm,es_rm = Evt.as_singleton_nospecul read_mem in
+            let eiid,write_rd = write_rd ov eiid in
+            let (),cl_wrs,es_wrs = Evt.as_singleton_nospecul write_rd in
+            let eiid,nem = rne ov cv eiid in
+            let (),cl_ne,eseq =  Evt.as_singleton_nospecul nem in
+            assert (E.is_empty_event_structure eseq) ;
+            let es =
+              E.riscv_cas_no es_rs1 es_rd es_wrs es_rm in
+            let cls = cl_a@cl_cv@cl_rm@cl_wrs@cl_ne  in
+            eiid,Evt.add ((),cls,es) acts)
+          acts_rs1 (eiid,Evt.empty) in
+      eiid,(acts, None)
+
+(* RISCV successful cas *)
+    let riscv_cas_ok
+        (read_rs1:'loc t) (read_rd:'v t) (read_rs2: 'v t)
+        (write_rd:'v-> unit t)
+        (read_mem: 'loc -> 'v t) (write_mem: 'loc -> 'v -> unit t)
+        (req: 'v -> 'v -> unit t)
+        eiid =
+      let eiid,read_rs1 = read_rs1 eiid in
+      let eiid,read_rd = read_rd eiid in
+      let eiid,read_rs2 = read_rs2 eiid in
+      let cv,cl_cv,es_rd = Evt.as_singleton_nospecul read_rd
+      and nv,cl_nv,es_rs2 = Evt.as_singleton_nospecul read_rs2 in
+      let acts_rs1,spec = read_rs1 in
+      assert (spec=None) ;
+      let eiid,acts =
+        Evt.fold
+          (fun (a,cl_a,es_rs1) (eiid,acts) ->
+            let eiid,read_mem = read_mem a eiid in
+            let eiid,write_mem = write_mem a nv eiid in
+            let ov,cl_rm,es_rm = Evt.as_singleton_nospecul read_mem
+            and (),cl_wm,es_wm= Evt.as_singleton_nospecul write_mem in
+            let eiid,write_rd = write_rd ov eiid in
+            let (),cl_wrs,es_wrs = Evt.as_singleton_nospecul write_rd in
+            let eiid,eqm = req ov cv eiid in
+            let (),cl_eq,eseq =  Evt.as_singleton_nospecul eqm in
+            assert (E.is_empty_event_structure eseq) ;
+            let es =
+              E.riscv_cas_ok es_rs1 es_rd es_rs2 es_wrs es_rm es_wm in
+            let cls = cl_a@cl_cv@cl_nv@cl_rm@cl_wm@cl_wrs@cl_eq  in
+            eiid,Evt.add ((),cls,es) acts)
+          acts_rs1 (eiid,Evt.empty) in
+      eiid,(acts, None)
+
 (* Simple alternative *)
     let altT    : 'a t -> 'a t -> 'a t =
       fun m1 m2 eiid ->

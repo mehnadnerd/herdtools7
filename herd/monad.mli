@@ -197,6 +197,16 @@ module type S =
           ('v -> unit t) -> ('loc -> 'v t) -> ('loc -> 'v -> unit t) ->
            ('loc -> unit t) ->
             ('v -> 'v -> unit t) -> unit t
+
+    val riscv_cas_no :
+      'loc t -> 'v t ->
+        ('v -> unit t) -> ('loc -> 'v t) ->
+          ('v -> 'v -> unit t) -> unit t
+
+    val riscv_cas_ok :
+      'loc t -> 'v t -> 'v t ->
+        ('v -> unit t) -> ('loc -> 'v t) -> ('loc -> 'v -> unit t) ->
+          ('v -> 'v -> unit t) -> unit t
     (* Temporary morello variation of CAS *)
     val aarch64_cas_ok_morello :
         'loc t -> 'v t -> 'v t -> ('loc -> 'v -> unit t) -> unit t

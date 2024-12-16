@@ -1,4 +1,4 @@
-RISCV MP+rel+ctrl Allowed
+RISCV MP+rel+ctrl Forbidden
 {
 0:x10=x; 1:x10=x;
 0:x2=y; 1:x2=y;

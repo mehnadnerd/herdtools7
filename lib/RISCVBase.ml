@@ -251,6 +251,7 @@ type opamo =
   | AMOMAXU
   | AMOMIN
   | AMOMINU
+  | AMOCAS
 
 let pp_opamo = function
   | AMOSWAP -> "amoswap"
@@ -262,6 +263,7 @@ let pp_opamo = function
   | AMOMAXU -> "amomaxu"
   | AMOMIN -> "amomin"
   | AMOMINU -> "amominu"
+  | AMOCAS -> "amocas"
 
 type cond = EQ | NE | LT | LTU | GE | GEU
 
@@ -279,19 +281,21 @@ let pp_czeroop = function
   | EQZ -> ".eqz"
   | NEZ -> ".nez"
 
-type width = Byte | Half | Word | Double
+type width = Byte | Half | Word | Double | Quad
 
 let tr_width = function
   | Byte -> MachSize.Byte
   | Half -> MachSize.Short
   | Word -> MachSize.Word
   | Double -> MachSize.Quad
+  | Quad -> MachSize.S128
 
 let pp_width = function
   | Byte -> "b"
   | Half -> "h"
   | Word -> "w"
   | Double -> "d"
+  | Quad -> "q"
 
 let pp_signed = function
   | Signed -> ""
