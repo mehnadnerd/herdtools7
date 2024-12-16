@@ -2497,6 +2497,143 @@ module Make  (C:Config) (AI:Arch_herd.S) (Act:Action.S with module A = AI) :
         aligned = rn.aligned @ rt.aligned @ rm.aligned @ wm.aligned ;
       }
 
+(* RISCV CAS, failure *)
+    let riscv_cas_no rs1 rd wrd rm =
+      let input_wrd = minimals wrd
+      and input_rm = minimals rm in
+      { procs = [] ;
+        events =
+        EventSet.union4
+          rs1.events rd.events wrd.events rm.events;
+        speculated =
+        if do_deps then
+          EventSet.union4
+            rs1.speculated rd.speculated wrd.speculated rm.speculated
+        else rs1.speculated;
+        po = po_union4 rs1 rd wrd rm;
+        intra_causality_data =
+        EventRel.union
+          (EventRel.union4
+             rs1.intra_causality_data
+             rd.intra_causality_data
+             wrd.intra_causality_data
+             rm.intra_causality_data)
+          (EventRel.union
+             (EventRel.cartesian (get_output rs1) input_rm) (* D1 *)
+             (EventRel.cartesian (get_output rm) input_wrd));    (* Df1 *)
+        intra_causality_control =
+          (if is_branching then
+             EventRel.union
+               (EventRel.cartesian (get_ctrl_output_commits rs1) input_rm)
+           else Misc.identity)
+            (EventRel.union6
+               rs1.intra_causality_control rd.intra_causality_control
+               wrd.intra_causality_control rm.intra_causality_control
+               (EventRel.cartesian (get_ctrl_output rd) input_wrd)      (* C1 *)
+               (EventRel.cartesian (get_ctrl_output rm) input_wrd));    (* C2 *)
+        control =
+        EventRel.union4 rs1.control rd.control rm.control wrd.control;
+        data_ports =
+        EventSet.union4
+          rs1.data_ports rd.data_ports
+          wrd.data_ports rm.data_ports;
+        success_ports =
+        EventSet.union4
+          rs1.success_ports rd.success_ports
+          wrd.success_ports rm.success_ports;
+        sca =
+        EventSetSet.union4
+          rs1.sca rd.sca wrd.sca rm.sca;
+        mem_accesses =
+        EventSet.union4
+          rs1.mem_accesses rd.mem_accesses
+          wrd.mem_accesses rm.mem_accesses;
+        input=None; data_input=None;
+        output = Some (maximals wrd);
+        ctrl_output = None ;
+        aligned = rs1.aligned @ rd.aligned @ wrd.aligned @ rm.aligned;
+      }
+
+(* RISCV CAS, success *)
+    let riscv_cas_ok rs1 rd rs2 wrd rm wm =
+      let input_wrd = minimals wrd
+      and input_rm = minimals rm
+      and input_wm = minimals wm in
+      { procs = [] ;
+        events =
+        EventSet.union6
+          rs1.events rd.events rs2.events
+          wrd.events rm.events wm.events ;
+        speculated =
+        if do_deps then
+          EventSet.union6
+            rs1.speculated rd.speculated rs2.speculated
+            wrd.speculated rm.speculated wm.speculated
+        else
+          rs1.speculated;
+        po = po_union6 rs1 rd rs2 wrd rm wm;
+        intra_causality_data =
+        EventRel.union
+          (EventRel.union6
+             rs1.intra_causality_data
+             rd.intra_causality_data
+             rs2.intra_causality_data
+             wrd.intra_causality_data
+             rm.intra_causality_data
+             wm.intra_causality_data)
+          (let output_rs1 = get_output rs1 in
+           EventRel.union4
+             (EventRel.cartesian output_rs1 input_rm)          (* D1 *)
+             (EventRel.cartesian (get_output rd) input_wrd)   (* Ds1 *)
+             (EventRel.cartesian output_rs1 input_wm)          (* Ds2 *)
+             (EventRel.cartesian (get_output rs2) input_wm));  (* Ds3 *)
+        intra_causality_control =
+        EventRel.union
+          (EventRel.union6
+             rs1.intra_causality_control
+             rd.intra_causality_control
+             rs2.intra_causality_control
+             wrd.intra_causality_control
+             rm.intra_causality_control
+             wm.intra_causality_control)
+          (let output_rd = get_ctrl_output rd in
+           let output_rm = get_ctrl_output rm in
+           EventRel.union5
+             (if is_branching then
+                EventRel.cartesian (get_ctrl_output_commits rs1)
+                  (EventSet.union input_rm input_wm)
+              else EventRel.empty)
+             (EventRel.cartesian output_rd input_wrd)  (* C1 *)
+             (EventRel.cartesian output_rm input_wrd)  (* C2 *)
+             (EventRel.cartesian output_rd input_wm)   (* Cs1 *)
+             (EventRel.cartesian output_rm input_wm)); (* Cs2 *)
+        control =
+        (EventRel.union6
+           rs1.control rd.control rs2.control
+           wrd.control rm.control wm.control);
+        data_ports =
+        (EventSet.union6
+           rs1.data_ports rd.data_ports rs2.data_ports
+           wrd.data_ports rm.data_ports wm.data_ports);
+        success_ports =
+        (EventSet.union6
+           rs1.success_ports rd.success_ports rs2.success_ports
+           wrd.success_ports rm.success_ports wm.success_ports);
+        sca =
+        (EventSetSet.union6
+           rs1.sca rd.sca rs2.sca
+           wrd.sca rm.sca wm.sca);
+        mem_accesses =
+        (EventSet.union6
+           rs1.mem_accesses rd.mem_accesses rs2.mem_accesses
+           wrd.mem_accesses rm.mem_accesses wm.mem_accesses);
+        input=None; data_input=None;
+        output = Some (maximals wrd); ctrl_output = None ;
+        aligned =
+          rs1.aligned @ rd.aligned @ rs2.aligned @ wrd.aligned
+          @ rm.aligned @ wm.aligned ;
+      }
+
 (* Store update composition, read data, read EA, write EA and  write Mem *)
 
 (* Dijointness not checked..., useless *)

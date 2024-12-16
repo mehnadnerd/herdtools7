@@ -98,6 +98,7 @@ module
       | RISCV.AMOMIN -> Op.Min
       | RISCV.AMOMAXU|RISCV.AMOMINU ->
           unimplemented (RISCV.pp_opamo op)
+      | RISCV.AMOCAS -> assert false
 
       let tr_cond cond = match cond with
       | RISCV.EQ -> Op.Eq
@@ -229,6 +230,36 @@ module
                 M.read_loc false
                   (fun loc v -> Act.Amo (loc,v,vstore,X an,(),sz,Access.VIR))
                   (A.Location_global loc) ii) >>= fun r -> write_reg rd r ii
+          | AMOCAS ->
+              let an = rmw_to_read rmw in
+              let read_rd = read_reg_rata rd ii
+              and write_rd v = write_reg rd v ii in
+
+        | I_CAS (v,rmw,rs,rt,rn) ->
+            (* TODO: unify cas functions *)
+            let cas = if morello then cas_morello else cas in
+            cas (tr_variant v) rmw rs rt rn ii
+      let cas sz rmw rs rt rn ii =
+        let an = rmw_to_read rmw in
+        let read_rs = read_reg_data sz rs ii
+        and write_rs v = write_reg_sz_non_mixed sz rs v ii in
+        lift_memop rn Dir.W true
+           (* mv is read new value from reg, not important
+              as this code is not executed in morello mode *)
+          (fun ac ma mv ->
+            let is_phy = Access.is_physical ac in
+             M.altT
+              (let read_mem a = do_read_mem_ret sz an aexp ac a ii in
+               M.aarch64_cas_no is_phy ma read_rs write_rs read_mem M.neqT)
+              (let read_rt = mv
+               and read_mem a = rmw_amo_read sz rmw ac a ii
+               and write_mem a v = rmw_amo_write sz rmw ac a v ii in
+               M.aarch64_cas_ok is_phy ma read_rs read_rt write_rs
+                 read_mem write_mem M.eqT))
+          (to_perms "rw" sz) (read_reg_ord rn ii) (read_reg_data sz rt ii)
+        an ii
+
+
           | _ ->
               (ra >>| rv) >>=
               (fun (loc,v) ->
@@ -296,10 +327,11 @@ module
               (fun (v1,v2) -> M.op (tr_opw op) v1 v2) >>=
               (fun v -> write_reg r1 v ii) >>= B.next1T
           | RISCV.Czero (op,r1,r2,r3) ->
-              (read_reg_ord r3 ii >>| M.unitT V.zero) >>= (fun (v1,v2) -> M.op (tr_czero op) v1 v2) >>= fun v ->
-                (M.choiceT v
-                  ((read_reg_ord r2 ii >>| M.unitT V.zero) >>= fun (v1,v2) -> write_reg r1 v2 ii)
-                  ((read_reg_ord r2 ii >>| M.unitT V.zero) >>= fun (v1,v2) -> write_reg r1 v1 ii)) >>= B.next1T
+              (read_reg_ord r2 ii >>| ((read_reg_ord r3 ii) >>= (fun v -> M.op (tr_czero op) v V.zero))) >>= fun (v1, v2) ->
+              M.condPredT v2
+                (M.unitT ())
+                (write_reg r1 V.zero ii)
+                (write_reg r1 v1 ii) >>= B.next1T
           | RISCV.J lbl -> B.branchT lbl
           | RISCV.Bcc (cond,r1,r2,lbl) ->
               (read_reg_ord r1 ii >>| read_reg_ord r2 ii) >>=

@@ -25,7 +25,7 @@ module Make (C:Arch_herd.Config) (V:Value.S) =
     let is_amo = function
       | Amo _ -> true
       | INop|Ret|J _|Bcc _|Load _|Store _|LoadReserve _
-      | OpI _|OpI2 _|OpIW _|Op _|OpW _|OpA _
+      | OpI _|OpI2 _|OpIW _|Op _|OpW _|OpA _ | Czero _
       |StoreConditional _|FenceIns _
       |AUIPC _| Ext _
            -> false
@@ -107,7 +107,7 @@ module Make (C:Arch_herd.Config) (V:Value.S) =
 
     let mem_access_size = function
       | INop | Ret | OpI _ | OpI2 _ | OpIW _ | Op _ | OpW _
-      | J _ | Bcc _ | FenceIns _ | OpA _ | AUIPC _
+      | J _ | Bcc _ | FenceIns _ | OpA _ | AUIPC _ | Czero _
       | Ext _
         -> None
       | Load (w,_,_,_,_,_) | Store (w,_,_,_,_)
