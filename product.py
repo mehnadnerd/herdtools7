@@ -180,6 +180,33 @@ def stage5():
             if rvreorder and not creorder:
                 print(f"Error: {s1} {s2}")
 
+# How this works:
+# We generate all pairs of two (load(all atomic types) or store(all atomic types)) for P0
+#     future enhancement could add a fence as well
+# First access is to x, second access is to y
+# to see if they can be reordered, P1 has a seq_cst store to y than to x
+# We run the litmus test and see if we get 3 or 4 possibilities,
+#     3 means reordering not allowed, 4 means reordering is allowed
+# This is done for both C and RISCV (for RISCV, we do it for all lowerings)
+# We then see if RISCV allows reorderings when C doesn't
+# This uses ./producttests/ as the directory to generate/use tests in
+
+# More details:
+# stage1/stage3 generate the tests for C/RISCV respectively.
+#     they icreate cross product of all "insts", and look up their corresponding statements
+#     some text substitution to make different variables/registers if first or secodn statement (a or b)
+# stage2/stage4 run the tests for C/RISCV respectively
+#     collect results in cresults/rvresults
+# stage5 searches for invalid lowerings
+#     for every pair of RISCV lowerings, sees if it allows reordering when the C doesn't
+#     if it does, that means there is a problem
+
+
+# User guidelines
+# To skip a stage, simply comment it out below
+# To disable an instruction/lowering, comment it out in rvinsts
+# To switch between testing TSO and WMO, call/don't stage4 and stage4t
+# Make sure to disable the TSO lowerings when testing WMO or you will get lots of failures
 
 stage1()
 stage2()

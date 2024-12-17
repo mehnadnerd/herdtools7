@@ -5,18 +5,6 @@ P0 (atomic_int* x, atomic_int* y) {
   atomic_store_explicit(y, 1, memory_order_seq_cst);
   int a = atomic_load_explicit(x, memory_order_seq_cst);
 }
-// houston we have a problem--this would be compiled to sw.rl followed by lw.aq on Table 95
-// TODO brs 20241215 write program to generate the following:
-// P0 has all pairs of two (load(all atomic types) or store(all atomic types))
-// first is always to addr x, second is to addr y
-// P1 has two seq-cst stores: first to addr y, then to addr x
-// --todo is this sufficient?
-// --I think it is because we are trying to figure out if the pair of ops can be reordered.
-// --they can iff the operation on x can see P1 w/o the operation on y seeing P1 
-// look at all possible outputs of x/y/a/b
-// do this in RV and C
-// see if RV has any behaviours not in C
-// make sure RV does between memory models to make sure they interoperate
 
 P1 (atomic_int* x, atomic_int* y) {
 
