@@ -1,0 +1,19 @@
+RISCV S+rel+ctrl-data Forbidden
+{
+0:x10=x; 1:x10=x;
+0:x2=y; 1:x2=y;
+1:x6=z;
+}
+P0            | P1                 ;
+li x9,  1     | lw  x1, (x2)       ;
+sw x9,(x10)   | beq x1, zero, label;
+fence w,w     | addi x3, x0, 0     ;
+sw x9, (x2)   | j label2           ;
+              | label:             ;
+              | addi x3, x4, 0     ;
+              | label2:            ;
+              | xor x8, x3, x3     ;
+              |                    ;
+              | li x8, 2           ;
+              | sw  x8,(x10)       ;
+exists(1:x1=1 /\ x=1)

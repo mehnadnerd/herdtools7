@@ -4,10 +4,12 @@
 .exe
 .merlin
 .native
+.vscode
 /Version.ml
 /herd-www/www/catalogue
 /herd-www/www/weblib
 _build/
+/out*/
 catIncludes.ml
 herdtools7.install
 jerd.byte
