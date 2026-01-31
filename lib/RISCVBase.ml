@@ -342,7 +342,14 @@ and is_nop = function
 
 let pp_label lbl = lbl
 
-let pp_k _m v = sprintf "%i" v
+open PPMode
+
+let pp_hash m = match m with
+| Ascii | Dot -> "#"
+| Latex -> "\\#"
+| DotFig -> "\\\\#"
+
+let pp_k m v = pp_hash m ^ string_of_int v
 
 type 'k basic_pp = { pp_k : 'k -> string; is_zero : 'k -> bool }
 
@@ -500,8 +507,7 @@ let get_next = function
 
 include InstrUtils.No(struct type instr = instruction end)
 
-include Pseudo.Make
-    (struct
+module PseudoI = struct
       type ins = instruction
       type pins = parsedInstruction
       type reg_arg = reg
@@ -565,10 +571,46 @@ include Pseudo.Make
          as ins
          -> ins
 
-    end)
+    end
+
+include Pseudo.Make(PseudoI)
 
 let get_macro _name = raise Not_found
 
 let hash_pteval _ = assert false
+module
+  MakeInstr
+    (C:
+       sig
+         val parser : string -> instruction
+       end)
+    (Tr:InstrUtils.Tr with type data = instruction)  = struct
 
-module Instr = Instr.No(struct type instr = instruction end)
+  type exec = Tr.exec
+  type t = instruction
+
+  let from_exec = Tr.from_exec
+  and to_exec = Tr.to_exec
+
+  let compare = Misc.polymorphic_compare
+  let eq = (=)
+
+  let pp = function
+    | INop ->  "NOP"
+    | i -> sprintf "instr:%S" (dump_instruction i)
+
+  let tr =
+    let open InstrLit in
+    function
+    | LIT_NOP -> INop
+    | LIT_INSTR s -> C.parser s
+
+  let can_overwrite =  true (*RISCV allows overwriting all instructions*)
+
+  module Set =
+    MySet.Make
+      (struct
+        type t = instruction
+        let compare = compare
+      end)
+end

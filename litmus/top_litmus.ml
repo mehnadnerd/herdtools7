@@ -571,7 +571,7 @@ end = struct
              let module X = Make(Cfg)(Arch')(LexParse)(Compile) in
              X.compile
           | `RISCV ->
-             let module V = Int64Constant.Make(RISCVBase.Instr) in
+             let module V = Int64Constant.Make(RISCVInstr.Std) in
              let module Arch' = RISCVArch_litmus.Make(OC)(V) in
              let module LexParse = struct
                  type instruction = Arch'.parsedPseudo

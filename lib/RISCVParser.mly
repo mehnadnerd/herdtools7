@@ -15,16 +15,14 @@
 (* "http://www.cecill.info". We also give a copy in LICENSE.txt.            *)
 (****************************************************************************)
 
-module A=RISCVBase
-
 (* We consider memory order and IO as the same*)
 let tr_rw = function
-  | "r" -> A.R
-  | "ir" -> A.IR
-  | "w" -> A.W
-  | "ow" -> A.OW 
-  | "rw"  -> A.RW
-  | "iorw" -> A.IORW
+  | "r" -> RISCVBase.R
+  | "ir" -> RISCVBase.IR
+  | "w" -> RISCVBase.W
+  | "ow" -> RISCVBase.OW 
+  | "rw"  -> RISCVBase.RW
+  | "iorw" -> RISCVBase.IORW
   | _ -> raise Parsing.Parse_error
 %}
 
@@ -54,9 +52,14 @@ let tr_rw = function
 %token <string> META
 %token NOP RET MV
 %token <RISCVBase.signed * RISCVBase.width> EXT
+%type <RISCVBase.pins> one_instr
 %type <MiscParser.proc list * (RISCVBase.parsedPseudo) list list> main
 %type <RISCVBase.parsedPseudo list> instr_option_seq
-%start main instr_option_seq
+
+
+%start main instr_option_seq one_instr
+
+
 
 %%
 
@@ -87,12 +90,12 @@ instr_option_seq :
   | is=separated_nonempty_list(SEMI,instr_option) EOF { is }
 
 instr_option :
-|            { A.Nop }
-| NAME COLON instr_option { A.Label ($1,$3) }
-| instr      { A.Instruction $1}
+|            { RISCVBase.Nop }
+| NAME COLON instr_option { RISCVBase.Label ($1,$3) }
+| instr      { RISCVBase.Instruction $1}
 
 reg:
-| SYMB_REG { A.Symbolic_reg $1 }
+| SYMB_REG { RISCVBase.Symbolic_reg $1 }
 | ARCH_REG { $1 }
 
 k:
@@ -112,58 +115,61 @@ addr0:
 | LPAR reg RPAR
     { $2 }
 
+one_instr:
+| i=instr EOF { i }
+
 instr:
 | NOP
-  { A.INop }
+  { RISCVBase.INop }
 | RET
-  { A.Ret }
+  { RISCVBase.Ret }
 /* OPs */
 | LI reg COMMA NUM
-   { A.Li ($2,Int64.of_string $4) }
+   { RISCVBase.Li ($2,Int64.of_string $4) }
 | LA reg COMMA NAME
-  { A.OpA (A.LA,$2,$4) }
+  { RISCVBase.OpA (RISCVBase.LA,$2,$4) }
 | LUI reg COMMA k
-  { A.OpI2 (A.LUI,$2,$4) }
+  { RISCVBase.OpI2 (RISCVBase.LUI,$2,$4) }
 | OPI reg COMMA reg COMMA k
-  { A.OpI ($1,$2,$4,$6) }
+  { RISCVBase.OpI ($1,$2,$4,$6) }
 | OPIW reg COMMA reg COMMA k
-  { A.OpIW ($1,$2,$4,$6) }
+  { RISCVBase.OpIW ($1,$2,$4,$6) }
 | OP reg COMMA reg COMMA reg
-  { A.Op ($1,$2,$4,$6) }
+  { RISCVBase.Op ($1,$2,$4,$6) }
 | OPW reg COMMA reg COMMA reg
-  { A.OpW ($1,$2,$4,$6) }
+  { RISCVBase.OpW ($1,$2,$4,$6) }
 | J NAME
-    { A.J $2 }
+    { RISCVBase.J $2 }
 | BCC reg COMMA reg COMMA NAME
-    { A.Bcc ($1,$2,$4,$6) }
+    { RISCVBase.Bcc ($1,$2,$4,$6) }
 | MV reg COMMA reg
-    { A.OpI (A.ADDI, $2, $4, MetaConst.Int 0) }
+    { RISCVBase.OpI (RISCVBase.ADDI, $2, $4, MetaConst.Int 0) }
 | LOAD reg COMMA addr
     { let w,s,mo = $1 in
     let off,r = $4 in
-    A.Load (w,s,mo,$2,off,r) }
+    RISCVBase.Load (w,s,mo,$2,off,r) }
 | STORE reg COMMA addr
     {let w,mo = $1 in
      let off,r = $4 in
-     A.Store (w,mo,$2,off,r) }
+     RISCVBase.Store (w,mo,$2,off,r) }
 | LR reg COMMA addr0
     { let w,mo = $1 in
-    A.LoadReserve (w,mo,$2,$4) }
+    RISCVBase.LoadReserve (w,mo,$2,$4) }
 | SC reg COMMA reg COMMA addr0
     { let w,mo = $1 in
-    A.StoreConditional (w,mo,$2,$4,$6) }
+    RISCVBase.StoreConditional (w,mo,$2,$4,$6) }
 | AUIPC reg COMMA k
-    { A.AUIPC ($2, $4) }
+    { RISCVBase.AUIPC ($2, $4) }
 | AMO reg COMMA reg COMMA addr0
     { let op,w,mo = $1 in
-    A.Amo (op,w,mo,$2,$4,$6) }
+    RISCVBase.Amo (op,w,mo,$2,$4,$6) }
 | FENCEI
-    { A.FenceIns A.FenceI }
+    { RISCVBase.FenceIns RISCVBase.FenceI }
 | FENCETSO
-    { A.FenceIns A.FenceTSO }
+    { RISCVBase.FenceIns RISCVBase.FenceTSO }
 | FENCE
-    { A.FenceIns (A.Fence (A.RW,A.RW)) }
+    { RISCVBase.FenceIns (RISCVBase.Fence (RISCVBase.RW,RISCVBase.RW)) }
 | FENCE NAME COMMA NAME
-    { A.FenceIns (A.Fence (tr_rw $2,tr_rw $4)) }
+    { RISCVBase.FenceIns (RISCVBase.Fence (tr_rw $2,tr_rw $4)) }
 | EXT reg COMMA reg
-    { let s,w = $1 in A.Ext (s,w,$2,$4) }
+    { let s,w = $1 in RISCVBase.Ext (s,w,$2,$4) }
