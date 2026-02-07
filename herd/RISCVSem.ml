@@ -19,14 +19,18 @@
 module
   Make
     (C:Sem.Config)
-    (V:Value.S with type Cst.Instr.exec = RISCVBase.instruction)
+    (V:Value.RISCV with type Cst.Instr.t = RISCVBase.instruction)
     =
   struct
     module RISCV = RISCVArch_herd.Make(SemExtra.ConfigToArchConfig(C))(V)
     module Act = MachAction.Make(C.PC)(RISCV)
     include SemExtra.Make(C)(RISCV)(Act)
 
+    include RISCVAnnot
+
     let mixed = RISCV.is_mixed
+    let self = C.variant Variant.Ifetch
+    (* TODO maybe need if coherent *)
 
 (* Barrier pretty print *)
     let barriers =
@@ -38,6 +42,34 @@ module
     let nat_sz = V.Cst.Scalar.machsize
 
     let atomic_pair_allowed _ _ = true
+
+    let mo_to_annot_atomic_r mo =
+      match mo with
+      | RISCVBase.Rlx -> X
+      | RISCVBase.Acq -> XA
+      | RISCVBase.Rel -> X
+      | RISCVBase.AcqRel -> XA
+
+    let mo_to_annot_atomic_w mo =
+      match mo with
+      | RISCVBase.Rlx -> X
+      | RISCVBase.Acq -> X
+      | RISCVBase.Rel -> XL
+      | RISCVBase.AcqRel -> XL
+
+    let mo_to_annot_r mo =
+      match mo with
+      | RISCVBase.Rlx -> N
+      | RISCVBase.Acq -> XA
+      | RISCVBase.Rel -> X
+      | RISCVBase.AcqRel -> XA
+
+    let mo_to_annot_w mo =
+      match mo with
+      | RISCVBase.Rlx -> N
+      | RISCVBase.Acq -> X
+      | RISCVBase.Rel -> XL
+      | RISCVBase.AcqRel -> XL
 
 (* Semantics proper *)
     module Mixed(SZ:ByteSize.S) = struct
@@ -118,43 +150,38 @@ module
       | RISCV.GE -> Op.Ge
       | RISCV.LTU|RISCV.GEU ->  unimplemented (RISCV.pp_bcc cond)
 
-      let mk_read sz ato loc v =
+      let mk_read sz ato expl loc v =
         let ac = Act.access_of_location_std loc in
-        Act.Access (Dir.R, loc, v, ato, (), sz, ac)
+        Act.Access (Dir.R, loc, v, ato, expl, sz, ac)
 
-      let plain = RISCV.(P Rlx)
+      let plain = RISCVAnnot.N
 
       let read_reg port r ii = match r with
       | RISCV.Ireg RISCV.X0 -> M.unitT V.zero
       | _ ->
-          M.read_loc port (mk_read nat_sz plain)
+          M.read_loc port (mk_read nat_sz plain RISCVExplicit.Exp)
             (A.Location_reg (ii.A.proc,r)) ii
 
       let read_reg_ord = read_reg Port.No
       let read_reg_data = read_reg Port.Data
       let read_reg_addr = read_reg Port.Addr
 
-      let read_mem_annot sz an a ii =
+      let read_mem_annot sz an a expl ii =
         if mixed then
-          Mixed.read_mixed Port.No sz (fun sz a v -> mk_read sz an a v)
+          Mixed.read_mixed Port.No sz (fun sz a v -> mk_read sz an expl a v)
             a ii
         else
-          M.read_loc Port.No (mk_read sz an) (A.Location_global a) ii
+          M.read_loc Port.No (mk_read sz an expl) (A.Location_global a) ii
 
-      let read_mem sz mo = read_mem_annot sz (RISCV.P mo)
-      let read_mem_atomic sz mo = read_mem_annot sz (RISCV.X mo)
-
-      let write_loc_annot sz an loc v ii =
-        M.mk_singleton_es
-          (Act.Access (Dir.W, loc, v, an, (), sz, Access.VIR))
-          ii
+      let read_mem sz mo = read_mem_annot sz (mo_to_annot_r mo)
+      let read_mem_atomic sz mo = read_mem_annot sz (mo_to_annot_atomic_r mo)
 
       let do_write_reg mk r v ii = match r with
       | RISCV.Ireg RISCV.X0 -> M.unitT ()
       | _ ->
           mk
             (Act.Access
-               (Dir.W, (A.Location_reg (ii.A.proc,r)), v, plain, (), nat_sz, Access.REG))
+               (Dir.W, (A.Location_reg (ii.A.proc,r)), v, plain, RISCVExplicit.Exp, nat_sz, Access.REG))
             ii
 
       let write_reg = do_write_reg M.mk_singleton_es
@@ -164,109 +191,71 @@ module
           (if O.variant Variant.Success then
             M.mk_singleton_es_success else M.mk_singleton_es)
 
-      let do_write_mem sz an a v ii  =
+      let do_write_mem sz an expl a v ii  =
         if mixed then
           Mixed.write_mixed sz
-            (fun sz a v -> Act.Access (Dir.W, a, v, an, (), sz, Access.VIR))
+            (fun sz a v -> Act.Access (Dir.W, a, v, an, expl, sz, Access.VIR))
             a v ii
         else
           M.mk_singleton_es
-            (Act.Access (Dir.W, A.Location_global a, v, an, (), sz, Access.VIR))
+            (Act.Access (Dir.W, A.Location_global a, v, an, expl, sz, Access.VIR))
             ii
 
-      let write_mem sz an = do_write_mem sz (RISCV.P an)
+      let write_mem sz mo = do_write_mem sz (mo_to_annot_w mo)
+      let write_mem_atomic sz mo = do_write_mem sz (mo_to_annot_atomic_w mo)
+      let write_mem_annot sz an = do_write_mem sz an
 
       let lrscdiffok = C.variant Variant.LrScDiffOk
 
-      let write_mem_conditional sz an a v resa ii =
+      let write_mem_conditional sz mo a v resa ii =
         if  lrscdiffok then
           (M.mk_singleton_es_eq
-             (Act.Access (Dir.W, A.Location_global a, v, RISCV.X an, (), sz,Access.VIR)) [] ii >>|
+             (Act.Access (Dir.W, A.Location_global a, v, mo_to_annot_atomic_w mo, RISCVExplicit.Exp, sz,Access.VIR)) [] ii >>|
              M.neqT resa V.zero) >>! () (* resa = zero <-> no matching load reserve *)
         else
           let eq = [M.VC.Assign (a,M.VC.Atom resa)] in
           M.mk_singleton_es_eq
-            (Act.Access (Dir.W, A.Location_global a, v, RISCV.X an, (), sz,Access.VIR)) eq ii
+            (Act.Access (Dir.W, A.Location_global a, v, mo_to_annot_atomic_w mo, RISCVExplicit.Exp, sz,Access.VIR)) eq ii
 
-      let write_mem_atomic sz an = do_write_mem sz (RISCV.X an)
 
       let create_barrier b ii = M.mk_singleton_es (Act.Barrier b) ii
 
       let commit ii = M.mk_singleton_es (Act.Commit (Act.Bcc,None)) ii
 
-(* Compute amo semantics anotations from syntactic  ones,
-   Notice that Sc is exclusively semantics, cf. assert false below *)
-(* RMW events *)
-      let rmw_events = not (C.variant Variant.SplittedRMW)
-      let specialX0 = C.variant Variant.SpecialX0
-      let asfence =  C.variant Variant.AcqRelAsFence
+(* Compute amo semantics anotations from syntactic  ones *)
 
-      let read_amo  =
+      let amo sz op mo rd rv ra ii =
         let open RISCV in
-        if specialX0 then fun mo -> match mo with
-        | Rlx|Acq|AcqRel -> mo
-        | Rel -> Rlx
-        | Sc -> assert false
-        else fun mo -> match mo with
-        | Rlx|Acq -> mo
-        | Rel -> Rlx
-        | AcqRel -> Sc (* Compatibility, may disappear in future *)
-        | Sc -> assert false
-
-      and write_amo =
-        let open RISCV in
-        if specialX0 then fun mo -> match mo with
-        | Rlx|Rel|AcqRel -> mo
-        | Acq -> Rlx
-        | Sc -> assert false
-        else fun mo -> match mo with
-        | Rlx|Rel -> mo
-        | Acq -> Rlx
-        | AcqRel -> Sc (* Compatibility, may disappear in future *)
-        | Sc -> assert false
-
-      let amo sz op an rd rv ra ii =
-        let open RISCV in
-        if rmw_events then
-          let ra = read_reg_addr ra ii
-          and rv = read_reg_data rv ii in
-          match op with
-          | AMOSWAP ->
-              (ra >>| rv) >>=
-              (fun (loc,vstore) ->
-                M.read_loc Port.No
-                  (fun loc v -> Act.Amo (loc,v,vstore,X an,(),sz,Access.VIR))
-                  (A.Location_global loc) ii) >>= fun r -> write_reg rd r ii
-          | _ ->
-              (ra >>| rv) >>=
-              (fun (loc,v) ->
-                M.fetch (tr_opamo op) v
-                  (fun v vstored ->
-                    Act.Amo (A.Location_global loc,v,vstored,RISCV.X an,(),sz,Access.VIR))
-                  ii)  >>=  fun v -> write_reg rd v ii
-        else match specialX0,op,rd,rv with
-        | true,AMOSWAP,Ireg X0,_ ->
-            (read_reg_data rv ii >>| read_reg_addr ra ii) >>=
-            fun (d,a) -> write_mem sz (write_amo an) a d ii
-        | true,(AMOOR|AMOADD),_,Ireg X0 ->
-            read_reg_addr ra ii >>=
-            fun a -> read_mem sz (read_amo an) a ii >>=
-              fun v -> write_reg rd v ii
-        | _ ->
-            let amo an =
+            let amo mo =
               let ra = read_reg_addr ra ii
               and rv = read_reg_data rv ii
-              and rmem = fun loc -> read_mem_atomic sz (read_amo an) loc ii
-              and wmem = fun loc v -> write_mem_atomic sz (write_amo an) loc v ii in
+              and rmem = fun loc -> read_mem_atomic sz mo loc RISCVExplicit.Exp ii
+              and wmem = fun loc v -> write_mem_atomic sz mo RISCVExplicit.Exp loc v ii in
               (match op with
               | AMOSWAP -> M.linux_exch | _ -> M.amo (tr_opamo op))
                 ra rv rmem wmem >>= fun r -> write_reg rd r ii in
-            amo an
+            amo mo
 
 (* Entry point *)
       let tr_sz = RISCV.tr_width
 
-      let build_semantics _ ii =
+(* Fetch of an instruction, i.e., a read from a label *)
+      let mk_fetch an loc v =
+        let ac = Access.VIR in (* Instruction fetch seen as ordinary, non PTE, access *)
+        Act.Access (Dir.R, loc, v, an, RISCV.nexp_ifetch, MachSize.Word, ac)
+
+(*********************)
+(* Instruction fetch *)
+(*********************)
+
+      let make_label_value proc lbl_str =
+        A.V.cstToV (Constant.mk_sym_virtual_label proc lbl_str)
+
+      let read_loc_instr a ii =
+        M.read_loc Port.No (mk_fetch RISCVAnnot.N) a ii
+
+
+      let do_build_semantics _ _ ii =
         M.addT (A.next_po_index ii.A.program_order_index)
           begin match ii.A.inst with
           | RISCV.INop-> B.next1T ()
@@ -315,24 +304,10 @@ module
               let mk_load mo =
                 read_reg_ord r2 ii >>=
                 (fun a -> M.add a (V.intToV k)) >>=
-                (fun ea -> read_mem sz mo ea ii) >>=
+                (fun ea -> read_mem sz mo ea RISCVExplicit.Exp ii) >>=
                 xt_op s sz >>=
                 (fun v -> write_reg r1 v ii) in
-              if specialX0 then mk_load mo >>= B.next1T
-              else if asfence then
-                let open RISCV in
-                let ld =  match mo with
-                | AcqRel ->
-                    create_barrier (Fence (RW,RW)) ii >>*= fun () -> mk_load Rlx
-                | Rel|Acq|Rlx -> mk_load Rlx
-                | Sc -> assert false in
-                let ld = match mo with
-                |Acq|AcqRel ->
-                    ld >>*= fun () -> create_barrier (Fence (R,RW)) ii
-                | Rlx|Rel -> ld
-                | Sc -> assert false in
-                ld >>= B.next1T
-              else mk_load mo >>= B.next1T
+              mk_load mo >>= B.next1T
 
           | RISCV.Store (sz,mo,r1,k,r2) ->
               let sz = tr_sz sz in
@@ -341,24 +316,14 @@ module
                  >>| read_reg_addr r2 ii) >>=
                 (fun (d,a) ->
                   (M.add a (V.intToV k)) >>=
-                  (fun ea -> write_mem sz mo ea d ii)) in
-              if specialX0 then mk_store mo >>= B.next1T
-              else if asfence then
-                let open RISCV in
-                let sd () =  mk_store Rlx in
-                let sd = match mo with
-                | Rel -> create_barrier (Fence (RW,W)) ii >>*= sd
-                | AcqRel -> create_barrier (Fence (RW,RW)) ii >>*= sd
-                | Acq|Rlx -> sd ()
-                | Sc -> assert false in
-                sd >>= B.next1T
-              else  mk_store mo >>= B.next1T
+                  (fun ea -> write_mem sz mo RISCVExplicit.Exp ea d ii)) in
+              mk_store mo >>= B.next1T
           | RISCV.LoadReserve  ((RISCV.Double|RISCV.Word as sz),mo,r1,r2) ->
               read_reg_addr r2 ii >>=
               (fun ea ->
                 write_reg RISCV.RESADDR ea ii
                 >>|
-                  (read_mem_atomic (tr_sz sz) mo ea ii
+                  (read_mem_atomic (tr_sz sz) mo ea RISCVExplicit.Exp ii
                    >>= fun v -> write_reg r1 v ii))
               >>= B.next2T
           | RISCV.StoreConditional
@@ -383,6 +348,79 @@ module
             >>= B.next1T
           | ins -> Warn.fatal "RISCV, instruction '%s' not handled" (RISCV.dump_instruction ins)
           end
+
+(* Compute a safe set of instructions that can
+ * overwrite another. By convention, those are
+ * instructions pointed to by "exported" labels.
+ *)
+      let get_overwriting_instrs test =
+        RISCV.state_fold
+          (fun _ v k ->
+            match v with
+            | V.Val (Constant.Instruction i) -> i::k
+            | _ -> k)
+          test.Test_herd.init_state []
+
+(* Test all possible instructions, when appropriate *)
+      let check_self test ii =
+        let module InstrSet = RISCV.V.Cst.Instr.Set in
+        let inst = ii.A.inst in
+        let lbls = get_exported_labels test in
+        let is_exported =
+          Label.Set.exists
+            (fun lbl ->
+              Label.Full.Set.exists
+                (fun (_,lbl0) -> Misc.string_eq lbl lbl0)
+                lbls)
+            ii.A.labels in
+        if is_exported then
+          do_build_semantics test inst ii
+          (* match Label.norm ii.A.labels with
+          | None -> assert false
+          | Some hd ->
+              let insts =
+                InstrSet.of_list
+                  (get_overwriting_instrs test) in
+              let insts =
+                InstrSet.add inst insts in
+              (* Shadow default control sequencing operator *)
+              let(>>*=) = M.bind_control_set_data_input_first in
+              let a_v = make_label_value ii.A.fetch_proc hd in
+              let a = (* Normalised address of instruction *)
+                A.Location_global a_v in
+              read_loc_instr a ii
+                >>= fun actual_val ->
+                  InstrSet.fold
+                  (* Ths first thing is the function, second is list, third is base case, so we have fault as base case *)
+                    (fun inst k ->
+                      M.op Op.Eq actual_val (V.instructionToV inst) >>==
+                      fun cond -> M.choiceT cond
+                          (commit_pred ii >>*=
+                            fun () -> do_build_semantics test inst ii)
+                          k)
+                    insts
+                    begin
+  (* Anything else than a legit instruction is a failure *)
+                      let (>>!) = M.(>>!) in
+                      let m_fault =
+                        mk_fault
+                          None Dir.R Annot.N ii
+                          (Some FaultType.AArch64.UndefinedInstruction)
+                          (Some "Invalid") in
+                      let lbl_v = get_instr_label ii in
+                      commit_pred ii
+                        >>*= fun () -> m_fault >>| set_elr_el1 lbl_v ii
+                        >>! B.fault [AArch64Base.elr_el1, lbl_v]
+                    end *)
+        else do_build_semantics test inst ii
+
+      let build_semantics test ii =
+        do_build_semantics test ii.A.inst ii
+        (* M.addT (A.next_po_index ii.A.program_order_index)
+          begin
+            if self then check_self test ii
+            else do_build_semantics test ii.A.inst ii
+          end *)
 
       let spurious_setaf _ = assert false
 

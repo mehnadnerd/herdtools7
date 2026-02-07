@@ -84,13 +84,11 @@ module Make(Cfg:Config) : XXXCompile_gen.S  =
     |AV.Acq|AV.Rel|AV.AcqRel ->
         if as_amo then amoor_as_load mo r1 r2
         else AV.Load (wloc,Signed,mo,r1,0,r2)
-    |AV.Sc -> assert false
     and str mo r1 r2 =  match mo with
     |AV.Rlx -> AV.Store (wloc,mo,r1,0,r2)
     |AV.Acq|AV.Rel|AV.AcqRel ->
         if as_amo then swap_as_store mo r1 r2
         else  AV.Store (wloc,mo,r1,0,r2)
-    |AV.Sc -> assert false
 
     let add r1 r2 r3 = AV.Op (AV.ADD,r1,r2,r3)
     let xor r1 r2 r3 = AV.Op (AV.XOR,r1,r2,r3)
@@ -415,7 +413,6 @@ module Make(Cfg:Config) : XXXCompile_gen.S  =
     let tr_swap a1 a2 = match tr_a a1,tr_a a2 with
     | (AV.Rlx,a)|(a,AV.Rlx) -> a
     | (AV.Acq,AV.Rel)|(AV.AcqRel,_)|(_,AV.AcqRel) -> AV.AcqRel
-    | (AV.Sc,_)|(_,AV.Sc) -> assert false
     | (AV.Rel,_)|(_,AV.Acq) ->
         Warn.fatal
           "bad atomicity in rmw, acquire on write or release on read"

@@ -291,14 +291,14 @@ let pp_signed = function
   | Signed -> ""
   | Unsigned -> "u"
 
-type mo = Rlx | Acq | Rel | AcqRel | Sc
+(* The memory orders that can be syntactically applied *)
+type mo = Rlx | Acq | Rel | AcqRel
 
 let pp_mo = function
   | Rlx -> ""
   | Acq -> ".aq"
   | Rel -> ".rl"
   | AcqRel -> ".aqrl"
-  | Sc -> ".sc"
 
 let pp_load w s mo = sprintf "l%s%s%s" (pp_width w) (pp_signed s) (pp_mo mo)
 let pp_store w mo = sprintf "s%s%s" (pp_width w) (pp_mo mo)

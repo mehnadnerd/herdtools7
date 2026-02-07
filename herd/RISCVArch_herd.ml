@@ -37,38 +37,41 @@ module Make (C:Arch_herd.Config) (V:Value.S) =
 
     let reject_mixed = false
 
-    type lannot = P of mo | X of mo
+    type lannot = RISCVAnnot.t
     let get_machsize _ = V.Cst.Scalar.machsize (* TODO, consider machsizes *)
-    let empty_annot = P Rlx
+    let empty_annot = RISCVAnnot.N
 
-    include Explicit.No
     include PteValSets.No
 
-    let is_atomic = function
-    | X _ -> true
-    | P _ -> false
-    let is_explicit = function | _ -> true
-    let is_not_explicit = function | _ -> false
+    include RISCVExplicit
 
-    let is_acquire = function
-      | X Acq|P Acq -> true
-      | X (Rlx|AcqRel|Rel|Sc)| P (Rlx|AcqRel|Rel) -> false
-      | P Sc -> assert false
+    let exp_annot = RISCVExplicit.Exp
+    let nexp_annot = RISCVExplicit.NExp RISCVExplicit.Other
+    let nexp_ifetch = RISCVExplicit.NExp RISCVExplicit.IFetch
 
-    let is_release = function
-      | X Rel|P Rel -> true
-      | X (Rlx|AcqRel|Acq|Sc)| P (Rlx|AcqRel|Acq) -> false
-      | P Sc -> assert false
+    let is_ifetch_annot = function
+      | NExp IFetch -> true
+      | NExp (AB|DB|ABDB|Other)|Exp -> false
 
-    let is_acquire_release = function
-      | X AcqRel|P AcqRel -> true
-      | X (Rlx|Rel|Acq|Sc)| P (Rlx|Rel|Acq) -> false
-      | P Sc -> assert false
+    let is_ab = function (* Setting of access bit *)
+      | NExp (AB|ABDB)-> true
+      | NExp (DB|IFetch|Other)|Exp -> false
 
-    let is_sc = function
-      | X Sc -> true
-      | P Sc -> assert false
-      | X (Rlx|Rel|Acq|AcqRel)| P (Rlx|Rel|Acq|AcqRel) -> false
+    and is_db = function (* Setting of dirty bit flag *)
+      | NExp (DB|ABDB) -> true
+      | NExp (AB|IFetch|Other)|Exp -> false
+
+    let pp_explicit e =
+      match e with
+      | RISCVExplicit.Exp
+           when C.verbose <= 2
+        -> ""
+      | _ -> RISCVExplicit.pp e
+
+    let explicit_sets = [
+      "AB", is_ab;
+      "DB", is_db;
+    ]
 
     let same_barrier b = fun c -> barrier_equal_semantics b c
 
@@ -84,24 +87,13 @@ module Make (C:Arch_herd.Config) (V:Value.S) =
 
     let cmo_sets = []
 
-    let annot_sets =
-      ["X", is_atomic; "Acq", is_acquire; "Rel", is_release;
-       "AcqRel",is_acquire_release;"Sc",is_sc]
+    let annot_sets = RISCVAnnot.sets
+    let pp_annot = RISCVAnnot.pp
+    let is_atomic = RISCVAnnot.is_atomic
 
     let isync =  FenceI
     let is_isync = same_barrier isync
     let pp_isync = Misc.capitalize (pp_barrier_dot isync)
-
-    let pp_annot =
-      let pp_mo = function
-      | Rlx -> ""
-      | Acq -> "Acq"
-      | Rel -> "Rel"
-      | AcqRel -> "AcqRel"
-      | Sc -> "Sc" in
-      function
-      | P a ->  pp_mo a
-      | X a -> sprintf "%s*" (pp_mo a)
 
     module V = V
 

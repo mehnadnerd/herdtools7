@@ -29,11 +29,11 @@ let fence =
 
 let po-loc-no-w = po-loc \ (po-loc?;[W];po-loc)
 let rsw = rf^-1;rf
-let AcqRel = AcqRel|Sc (* Compat *)
-let AQ = (Acq|AcqRel)
-and RL = (Rel|AcqRel)
+(* These don't include AcqRel because read and write events are seperated so it doesn't exist *)
+let AQ = (Acq)
+and RL = (Rel)
 let AMO = try AMO with (R & W) (* Compat *)
-let RCsc = (Acq|Rel|AcqRel) & (AMO|X)
+let RCsc = (Acq|Rel) & (AMO|X)
 (*************)
 (* ppo rules *)
 (*************)
@@ -70,3 +70,22 @@ let ppo =
 | r11
 | r12
 | r13
+
+(**************)
+(* ippo rules *)
+(**************)
+
+let fence.i = fencerel(Fence.i)
+
+let ir1 = [F];(iico_ctrl | iico_data)*
+and ir2 = [F];po;[F] (* Hypothesis is that removing this is sufficient to handle incoherent I$ *)
+and ir3 = fence.i;po;[F]
+and ir4 = [M];po;fence.i
+and ir5 = [W];rf;[F]
+
+let ippo = 0
+(*  ir1*)
+| ir2
+| ir3
+| ir4
+| ir5

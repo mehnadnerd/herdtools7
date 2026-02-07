@@ -22,14 +22,10 @@
 type t =
   | Success     (* Riscv Model with explicit success dependency *)
   | Instr       (* Define instr (or same-instance) relation *)
-  | SpecialX0   (* Some events by AMO to or from x0 are not generated *)
   | NoRMW
-(* Riscv: Expand load acquire and store release as fences *)
-  | AcqRelAsFence
 (* Backward compatibility *)
   | BackCompat
   | FullScDepend    (* Complete dependencies for Store Conditinal *)
-  | SplittedRMW     (* Splitted RMW events for riscv *)
   | SwitchDepScWrite  (* Switch dependency on sc mem write, riscv, aarch64 *)
   | SwitchDepScResult  (* Switch dependency from address read to sc result register,  aarch64 *)
   | LrScDiffOk      (* Lr/Sc paired to <> addresses may succeed (!) *)
@@ -137,12 +133,9 @@ let tags =
 let parse s = match Misc.lowercase s with
 | "success" -> Some Success
 | "instr" -> Some Instr
-| "specialx0"|"amox0"|"x0" -> Some SpecialX0
 | "normw" -> Some NoRMW
-| "acqrelasfence" -> Some AcqRelAsFence
 | "backcompat"|"back" -> Some BackCompat
 | "fullscdepend"|"scdepend" -> Some FullScDepend
-| "splittedrmw" -> Some SplittedRMW
 | "switchdepscwrite" -> Some  SwitchDepScWrite
 | "switchdepscresult" -> Some  SwitchDepScResult
 | "lrscdiffok" -> Some  LrScDiffOk
@@ -239,12 +232,9 @@ let parse s = match Misc.lowercase s with
 let pp = function
   | Success -> "success"
   | Instr -> "instr"
-  | SpecialX0 -> "specialx0"
   | NoRMW -> "normw"
-  | AcqRelAsFence -> "acqrelasfence"
   | BackCompat ->"backcompat"
   | FullScDepend -> "FullScDepend"
-  | SplittedRMW -> "SplittedRWM"
   | SwitchDepScWrite -> "SwitchDepScWrite"
   | SwitchDepScResult -> "SwitchDepScResult"
   | LrScDiffOk -> " LrScDiffOk"

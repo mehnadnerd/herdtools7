@@ -684,7 +684,7 @@ module Make
       Lazy.force begin
         try StringMap.find k env
         with
-        | Not_found -> Warn.user_error "unbound var: %s" k
+        | Not_found -> Warn.user_error "unbound var: %s %s" k (StringMap.pp_str (fun key _v -> key) env)
       end
 
     let find_env_loc loc env k =

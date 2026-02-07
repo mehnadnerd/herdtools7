@@ -150,3 +150,9 @@ module type AArch64ASL =
   (*and type arch_op = ASLOp.op AArch64Op.binop*)
   and type arch_extra_op = ASLOp.op
   and type arch_extra_op1 = ASLOp.op1
+
+module type RISCV =
+  S
+  with type Cst.Instr.exec = RISCVBase.instruction
+  and  type Cst.Instr.t    = RISCVBase.instruction
+(* TODO brs Pteval, maybe the arch_constr_op *)
