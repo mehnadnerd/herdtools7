@@ -77,6 +77,7 @@ module
       module Mixed = M.Mixed(SZ)
 
       let (>>=) = M.(>>=)
+      let (>>==) = M.(>>==)
       let (>>*=) = M.(>>*=)
       let (>>|) = M.(>>|)
       let (>>!) = M.(>>!)
@@ -87,6 +88,12 @@ module
 
       let sxtw = sxt_op MachSize.Word
       and uxtw = uxt_op MachSize.Word
+
+      let mask32 _ m = m
+
+(*  Promotion/Demotion *)
+      let promote = M.op1 Op.Promote
+      and demote = M.op1 Op.Demote
 
       let xt_op s =
         let open Sign in
@@ -220,7 +227,12 @@ module
 
       let create_barrier b ii = M.mk_singleton_es (Act.Barrier b) ii
 
-      let commit ii = M.mk_singleton_es (Act.Commit (Act.Bcc,None)) ii
+    (* Emit commit event *)
+      let commit_bcc ii = M.mk_singleton_es (Act.Commit (Act.Bcc,None)) ii
+      and commit_pred_txt txt ii =
+        M.mk_singleton_es (Act.Commit (Act.Pred,txt)) ii
+
+      let commit_pred ii = commit_pred_txt None ii
 
 (* Compute amo semantics anotations from syntactic  ones *)
 
@@ -256,7 +268,6 @@ module
 
 
       let do_build_semantics _ _ ii =
-        M.addT (A.next_po_index ii.A.program_order_index)
           begin match ii.A.inst with
           | RISCV.INop-> B.next1T ()
           | RISCV.Ret when O.variant Variant.Telechat -> M.unitT () >>! B.Exit
@@ -298,7 +309,7 @@ module
           | RISCV.Bcc (cond,r1,r2,lbl) ->
               (read_reg_ord r1 ii >>| read_reg_ord r2 ii) >>=
               fun (v1,v2) -> M.op (tr_cond cond) v1 v2 >>=
-                fun v -> commit ii >>= fun () -> B.bccT v lbl
+                fun v -> commit_bcc ii >>= fun () -> B.bccT v lbl
           | RISCV.Load (sz,s,mo,r1,k,r2) ->
               let sz = tr_sz sz in
               let mk_load mo =
@@ -374,8 +385,7 @@ module
                 lbls)
             ii.A.labels in
         if is_exported then
-          do_build_semantics test inst ii
-          (* match Label.norm ii.A.labels with
+          match Label.norm ii.A.labels with
           | None -> assert false
           | Some hd ->
               let insts =
@@ -383,16 +393,18 @@ module
                   (get_overwriting_instrs test) in
               let insts =
                 InstrSet.add inst insts in
-              (* Shadow default control sequencing operator *)
-              let(>>*=) = M.bind_control_set_data_input_first in
-              let a_v = make_label_value ii.A.fetch_proc hd in
-              let a = (* Normalised address of instruction *)
+                (* Shadow default control sequencing operator *)
+                let(>>*=) = M.bind_control_set_data_input_first in
+                let a_v = make_label_value ii.A.fetch_proc hd in
+                let a = (* Normalised address of instruction *)
                 A.Location_global a_v in
               read_loc_instr a ii
-                >>= fun actual_val ->
-                  InstrSet.fold
+                >>=
+                fun actual_val ->
+                InstrSet.fold
                   (* Ths first thing is the function, second is list, third is base case, so we have fault as base case *)
                     (fun inst k ->
+                      (Warn.warn_always "RISCV trying cmodx actual val %s against %s" (A.pp_location (A.Location_global actual_val)) (A.pp_location (A.Location_global (V.instructionToV inst))));
                       M.op Op.Eq actual_val (V.instructionToV inst) >>==
                       fun cond -> M.choiceT cond
                           (commit_pred ii >>*=
@@ -401,26 +413,20 @@ module
                     insts
                     begin
   (* Anything else than a legit instruction is a failure *)
-                      let (>>!) = M.(>>!) in
-                      let m_fault =
-                        mk_fault
-                          None Dir.R Annot.N ii
-                          (Some FaultType.AArch64.UndefinedInstruction)
-                          (Some "Invalid") in
-                      let lbl_v = get_instr_label ii in
-                      commit_pred ii
-                        >>*= fun () -> m_fault >>| set_elr_el1 lbl_v ii
-                        >>! B.fault [AArch64Base.elr_el1, lbl_v]
-                    end *)
-        else do_build_semantics test inst ii
+                      (Warn.warn_always "RISCV failing cmodx list %s" (InstrSet.pp_str ";" RISCV.dump_instruction insts));
+                      (Warn.warn_always "RISCV failing cmodx actual val %s" (A.pp_location (A.Location_global actual_val)));
+                      (Warn.warn_always "RISCV, instruction '%s' was modified but couldn't figure out what was modified to" (RISCV.dump_instruction inst));
+                      do_build_semantics test inst ii
+                    end
+        else
+          do_build_semantics test inst ii
 
       let build_semantics test ii =
-        do_build_semantics test ii.A.inst ii
-        (* M.addT (A.next_po_index ii.A.program_order_index)
+        M.addT (A.next_po_index ii.A.program_order_index)
           begin
             if self then check_self test ii
             else do_build_semantics test ii.A.inst ii
-          end *)
+          end
 
       let spurious_setaf _ = assert false
 
