@@ -386,7 +386,7 @@ module
      begin
        match ArchOp.mask c sz with
        | Some c -> Val c
-       | None -> unop op (Cst.Scalar.mask sz) v
+       | None -> Warn.warn_always "ArchOp mask not found"; unop op (Cst.Scalar.mask sz) v
      end
   | _ ->  unop op (Cst.Scalar.mask sz) v
 

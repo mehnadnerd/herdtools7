@@ -4,8 +4,8 @@
 (* Jade Alglave, University College London, UK.                             *)
 (* Luc Maranget, INRIA Paris-Rocquencourt, France.                          *)
 (*                                                                          *)
-(* Copyright 2023-present Institut National de Recherche en Informatique et *)
-(* en Automatique and the authors. All rights reserved.                     *)
+(* Copyright 2021-present Institut National de Recherche en Informatique et *)
+(* en Automatique, ARM Ltd and the authors. All rights reserved.            *)
 (*                                                                          *)
 (* This software is governed by the CeCILL-B license under French law and   *)
 (* abiding by the rules of distribution of free software. You can use,      *)
@@ -14,23 +14,12 @@
 (* "http://www.cecill.info". We also give a copy in LICENSE.txt.            *)
 (****************************************************************************)
 
-module Make(Conf:RunTest.Config)(ModelConfig:MemCat.Config) = struct
-  module LexConfig = struct
-    let debug = Conf.debug.Debug_herd.lexer
-  end
-  module ArchConfig = SemExtra.ConfigToArchConfig(Conf)
-  module RISCVValue = RISCVValue.Make(RISCVInstr.Std)
-  module RISCV = RISCVArch_herd.Make(ArchConfig)(RISCVValue)
-  module RISCVLexParse = struct
-    type instruction = RISCV.parsedPseudo
-    type token = RISCVParser.token
-    module Lexer = RISCVLexer.Make(LexConfig)
-    let lexer = Lexer.token
-    let parser = MiscParser.mach2generic RISCVParser.main
-  end
-  module RISCVS = RISCVSem.Make(Conf)(RISCVValue)
-  module RISCVM = MemCat.Make(ModelConfig)(RISCVS)
-  module P = GenParser.Make (Conf) (RISCV) (RISCVLexParse)
-  module X = RunTest.Make (RISCVS) (P) (RISCVM) (Conf)
-  let run = X.run
+module Make (C : sig
+end) : Value.RISCV = struct
+  module RISCVI = RISCVInstr.Make(C)(RISCVInstr.IdTr)
+  module RISCVCst = SymbConstant.Make (Int64Scalar) (RISCVPteVal) (AddrReg.No) (RISCVI)
+  module NoCst = SymbConstant.Make (Int64Scalar) (PteVal.No) (AddrReg.No) (RISCVI)
+  module NoArchOp = ArchOp.No(NoCst)
+  module RISCVOp = RISCVOp.Make(Int64Scalar)(NoArchOp)
+  include SymbValue.Make (RISCVCst) (RISCVOp)
 end

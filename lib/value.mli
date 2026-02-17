@@ -153,6 +153,8 @@ module type AArch64ASL =
 
 module type RISCV =
   S
-  with type Cst.Instr.exec = RISCVBase.instruction
+  with type Cst.PteVal.t   = RISCVPteVal.t
+  and  type Cst.Instr.exec = RISCVBase.instruction
   and  type Cst.Instr.t    = RISCVBase.instruction
-(* TODO brs Pteval, maybe the arch_constr_op *)
+  and type 'a arch_constr_op1 = 'a RISCVOp.unop
+  and type 'a arch_constr_op = 'a RISCVOp.binop

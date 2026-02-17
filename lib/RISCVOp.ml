@@ -29,12 +29,15 @@ type 'op binop =
 module
    Make
      (S:Scalar.S)
-     (Extra:ArchOp.S with type scalar = S.t and type instr = RISCVBase.instruction and type addrreg = AddrReg.No.t and type pteval = RISCVPteVal.t) : ArchOp.S
+     (Extra:ArchOp.S with type scalar = S.t and type instr = RISCVBase.instruction) : ArchOp.S
    with type extra_op1 = Extra.op1
     and type 'a constr_op1 = 'a unop
     and type extra_op = Extra.op
     and type 'a constr_op = 'a binop
     and type scalar = S.t
+    and type pteval = RISCVPteVal.t
+    and type addrreg = AddrReg.No.t
+    and type instr = RISCVBase.instruction
   = struct
 
     type extra_op = Extra.op
@@ -98,15 +101,20 @@ module
       | PteVal {oa;_} -> Some (Symbolic (oa2symbol oa))
       | _ -> None
 
-    
+    let fromExtraPteVal _ = raise Exit
+    and toExtraPteVal _ = raise Exit
+    let fromExtraAddrReg _ = raise Exit
+    and toExtraAddrReg _ = raise Exit
+    (* let pteToExtra : pteval -> Extra.pteval = function
+    | pte -> Extra.pteval pte *)
 
     let trToExtra cst =
       Constant.map
-        Misc.identity Misc.identity Misc.identity
+        Misc.identity toExtraPteVal toExtraAddrReg
         Misc.identity cst
     and trFromExtra cst =
       Constant.map
-        Misc.identity Misc.identity Misc.identity
+        Misc.identity fromExtraPteVal fromExtraAddrReg
         Misc.identity cst
 
     let do_op = function
@@ -145,7 +153,15 @@ module
     and andop p m  = RISCVPteVal.andop p @@ S.to_int64 m
       |> Misc.app_opt S.of_int64
 
-    (* Share code, placement in ASLOp not ideal *)
-    let mask = ASLOp.mask
+    let mask c sz =
+      let open MachSize in
+      let open Constant in
+      match c,sz with
+    (* The following are 64bits quantities, the last two being virtual addresses *)
+      | ((PteVal _|Symbolic _),Quad)
+    (* Non-signed 32bit quantity *)
+      | (Instruction _,(Word|Quad))
+        -> Some c
+      | _,_ -> None
 
   end
