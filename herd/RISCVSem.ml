@@ -267,8 +267,8 @@ module
         M.read_loc Port.No (mk_fetch RISCVAnnot.N) a ii
 
 
-      let do_build_semantics _ _ ii =
-          begin match ii.A.inst with
+      let do_build_semantics _ inst ii =
+          begin match inst with
           | RISCV.INop-> B.next1T ()
           | RISCV.Ret when O.variant Variant.Telechat -> M.unitT () >>! B.Exit
           | RISCV.Li (r,k) ->
@@ -375,7 +375,7 @@ module
 (* Test all possible instructions, when appropriate *)
       let check_self test ii =
         let module InstrSet = RISCV.V.Cst.Instr.Set in
-        let inst = ii.A.inst in
+        let orig_inst = ii.A.inst in
         let lbls = get_exported_labels test in
         let is_exported =
           Label.Set.exists
@@ -392,7 +392,7 @@ module
                 InstrSet.of_list
                   (get_overwriting_instrs test) in
               let insts =
-                InstrSet.add inst insts in
+                InstrSet.add orig_inst insts in
                 (* Shadow default control sequencing operator *)
                 let(>>*=) = M.bind_control_set_data_input_first in
                 let a_v = make_label_value ii.A.fetch_proc hd in
@@ -404,7 +404,6 @@ module
                 InstrSet.fold
                   (* Ths first thing is the function, second is list, third is base case, so we have fault as base case *)
                     (fun inst k ->
-                      (Warn.warn_always "RISCV trying cmodx actual val %s against %s" (A.pp_location (A.Location_global actual_val)) (A.pp_location (A.Location_global (V.instructionToV inst))));
                       M.op Op.Eq actual_val (V.instructionToV inst) >>==
                       fun cond -> M.choiceT cond
                           (commit_pred ii >>*=
@@ -412,14 +411,12 @@ module
                           k)
                     insts
                     begin
-  (* Anything else than a legit instruction is a failure *)
-                      (Warn.warn_always "RISCV failing cmodx list %s" (InstrSet.pp_str ";" RISCV.dump_instruction insts));
-                      (Warn.warn_always "RISCV failing cmodx actual val %s" (A.pp_location (A.Location_global actual_val)));
-                      (Warn.warn_always "RISCV, instruction '%s' was modified but couldn't figure out what was modified to" (RISCV.dump_instruction inst));
-                      do_build_semantics test inst ii
+                      (* Anything else than a legit instruction is a failure *)
+                      (* Just end program since exceptions aren't implemented *)
+                      M.unitT B.Exit
                     end
         else
-          do_build_semantics test inst ii
+          do_build_semantics test orig_inst ii
 
       let build_semantics test ii =
         M.addT (A.next_po_index ii.A.program_order_index)
