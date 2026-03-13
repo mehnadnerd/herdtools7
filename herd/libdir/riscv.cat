@@ -22,7 +22,7 @@ include "cos-opt.cat"
 acyclic co|rf|fr|po-loc as Coherence
 
 (* Main model axiom *)
-acyclic co|rfe|fr|ppo|ippo as Model
+acyclic co|rfe|fr|ppo|irf|ippo as Model
 
 (* Atomicity axiom *)
 empty rmw & (fre;coe) as Atomic

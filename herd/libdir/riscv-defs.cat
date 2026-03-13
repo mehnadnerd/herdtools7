@@ -2,6 +2,13 @@
 (* The RISCV Instruction set manual v2.3 *)
 (*****************************************)
 
+let anyR = R
+let anyW = W
+let anyM = M
+let R = anyR & Exp
+let W = anyW & Exp
+let M = anyM & Exp
+let I = anyR & NExp (* TODO does this include PTE reads? *)
 
 (*************)
 (* Utilities *)
@@ -75,17 +82,20 @@ let ppo =
 (* ippo rules *)
 (**************)
 
-let fence.i = fencerel(Fence.i)
-
-let ir1 = [F];(iico_ctrl | iico_data)*
-and ir2 = [F];po;[F] (* Hypothesis is that removing this is sufficient to handle incoherent I$ *)
-and ir3 = fence.i;po;[F]
-and ir4 = [M];po;fence.i
-and ir5 = [W];rf;[F]
+if variant "self" 
+(*let ir1 = [I];po;[M]*) (* I think this is OK for coherent I$ *)
+let ir1 = [I];(iico_data|iico_ctrl|rf-reg)+
+and ir2 = [I];po;[I] (* Hypothesis is that removing this is sufficient to handle incoherent I$ *)
+and ir3 = [M];fencerel(Fence.i);[I]
 
 let ippo = 0
-(*  ir1*)
+| ir1
 | ir2
 | ir3
-| ir4
-| ir5
+
+let irf = [W];rf;[I]
+
+else
+let ippo = 0
+let irf = 0
+end

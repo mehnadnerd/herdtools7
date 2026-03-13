@@ -7,4 +7,4 @@ fence w,w    |  fence.i     ;
 sw t0,0(a3)  |  lw s9,0(a1) ;
 
 ~exists 1:s0=1 /\ 1:s9=0
-(* This is allowed on AArch64 but forbidden on RISCV, fence.i is after all previous loads and stores *)
+(* Using fence.i as a fence r,r *)
