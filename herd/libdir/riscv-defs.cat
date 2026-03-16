@@ -26,7 +26,7 @@ let fence.rw.rw = [M];fencerel(Fence.rw.rw);[M]
 let fence.tso =
   let f = fencerel(Fence.tso) in
   ([W];f;[W]) | ([R];f;[M])
-let fence.i = [M];fencerel(Fence.i);[M] (* Added because of combination of ir4->ir3->ir1, allows using fence.i as a fence without using -variant self *)
+let fence.i = [M];fencerel(Fence.i);[M] (* Allows using fence.i as a fence without using -variant self *)
 
 let fence =
   fence.r.r | fence.r.w | fence.r.rw |
@@ -84,9 +84,9 @@ let ppo =
 
 if variant "self" 
 (*let ir1 = [I];po;[M]*) (* I think this is OK for coherent I$ *)
-let ir1 = [I];(iico_data|iico_ctrl|rf-reg)+
-and ir2 = [I];po;[I] (* Hypothesis is that removing this is sufficient to handle incoherent I$ *)
-and ir3 = [M];fencerel(Fence.i);[I]
+let ir1 = [I];(iico_data|iico_ctrl|rf-reg)+ (* Fetch-to-execute *)(* Is this sufficient? This might need more, maybe thsi is jsut dtrm? *)
+and ir2 = [I];po;[I] (* In-order-fetch *) (* Hypothesis is that removing this is sufficient to handle incoherent I$ *)
+and ir3 = [M];fencerel(Fence.i);[I] (* Effect of fence.i *)
 
 let ippo = 0
 | ir1

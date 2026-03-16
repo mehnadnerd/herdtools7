@@ -1,0 +1,12 @@
+RISCV inorderfetch
+{ 0:t0=nop;       0:a1=P1:mod1; 0:a3=P1:mod2; }
+P0           | P1           ;
+sw t0,0(a3)  |              ;
+fence w,w    |              ;
+sw t0,0(a1)  | mod1:        ;
+             |  li s8, 1    ;
+             | mod2:        ;
+             |  li s9, 1    ;
+             | end:         ;  
+~exists 1:s8=0 /\ 1:s9=1
+(* Maybe I should learn a method other than message passing? *)
