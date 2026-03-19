@@ -3,14 +3,21 @@
 (* generates possible co's, optimized version *)
 
 (* co observations in test *)
+
 let invrf = rf^-1
 
 let obsco =
+  let po-loc = [Exp];po-loc;[Exp] in
   let ww = po-loc & (W * W)
   and rw = rf ; (po-loc & (R * W))
   and wr = ((po-loc & (W * R)) ; invrf) \ id
   and rr = (rf ; (po-loc & (R * R)) ; invrf) \ id in
   (ww|rw|wr|rr)
+
+
+
+
+
 
 (* The following applies to C only, where RMW is both R and W *)
 let rmwco =
