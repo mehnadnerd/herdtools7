@@ -1,0 +1,24 @@
+#
+IDC.basicfencei.litmus
+IDC.dcc2.litmus
+IDC.dcc2allow.litmus
+IDC.dcc2nofence.litmus
+# IDC.fenceiMP.litmus # TODO needs non-mod fetch
+IDC.fetchtoexecute.litmus
+IDC.fetchtoexecutechained.litmus
+IDC.instructionfromread.litmus
+IDC.instructionfromread2.litmus
+IDC.instructionreadfrom.litmus
+IDC.nobackwards.litmus
+IDC.notguaranteed.litmus
+IDC.yesallowed.litmus
+# IDC.LB.RF.litmus # TODO needs non-mod fetch
+IDC.MP.FF+fencei.litmus
+# IDC.MP.FR+fencei.litmus # TODO needs non-mod fetch
+IDC.MP.RF+fencei.litmus
+IDC.MP.WW+irf.litmus
+# IDC.S.RF+fencei.litmus # TODO needs jr
+IDC.SB+fencei.litmus
+IDC.SB+nosync.litmus
+IDC.SB.RF+fencei.litmus
+# IDC.WRC-inst.litmus # TODO needs jr

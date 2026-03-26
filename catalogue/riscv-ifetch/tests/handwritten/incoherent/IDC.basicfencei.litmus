@@ -1,0 +1,11 @@
+RISCV IDC.basicfencei
+Variant=self
+CacheType=IDC
+{ 0:t0=instr:"nop"; 0:a1=P0:mod; }
+P0           ;
+sw t0,0(a1)  ;
+fence.i      ;
+mod:         ;
+li t1, 1     ;
+~exists 0:t1=1
+(* Seeing new instruction is required after fence.i, based on SM.B+isb *)

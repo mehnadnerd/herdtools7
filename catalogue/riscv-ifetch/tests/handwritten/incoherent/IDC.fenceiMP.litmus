@@ -1,0 +1,13 @@
+RISCV IDC.fenceiMP
+Variant=self
+CacheType=IDC
+{                 0:a1=x; 1:a1=x;
+  0:t0=1; 0:a3=z; 1:a3=z; 1:s9=0; }
+P0           | P1           ;
+sw t0,0(a1)  |  lw s0,0(a3) ;
+fence w,w    |  fence.i     ;
+sw t0,0(a3)  |  lw s9,0(a1) ;
+
+~exists 1:s0=1 /\ 1:s9=0
+(* Using fence.i as a fence r,r *)
+(* TODO needs non-modified fetch *)

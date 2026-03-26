@@ -1,0 +1,18 @@
+RISCV MP.WWW+irf+po
+Variant=self
+CacheType=DIC
+{ 0:t1=instr:"li s2,2"; 0:a2=P0:mod; 0:a1=x; 0:t0=1; 0:a3=y;
+                        1:a2=P0:mod; 1:a1=x;         1:a3=y;}
+P0           | P1           ;
+sw t0,0(a3)  |              ;
+sw t1,0(a2)  |  lw s1,0(a1) ;
+             |  fence r,r   ;
+mod:         |              ;
+li s2,1      |  lwu s0,(a2) ;
+sw t0,0(a1)  |  lw  s2,(a3) ;
+~exists (0:s2=2 /\ 1:s0=nop /\ 1:s1=1 /\ 1:s2=1)
+(*
+if we see li 2 in s1, then store to mod is before store to x
+this means we can't fetch from store buffer
+store to y is unordered wrt store to x and store to mod
+*)

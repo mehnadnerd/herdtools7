@@ -1,0 +1,15 @@
+RISCV DIC.MP.WW+irf
+Variant=self
+CacheType=DIC
+{ 0:t1=instr:"sw t0,0(a1)"; 0:a2=P0:mod; 0:a1=x; 0:t0=1;
+                            1:a2=P0:mod; 1:a1=x; }
+P0           | P1           ;
+sw t1,0(a2)  |  lw s1,0(a1) ;
+             |  fence r,r   ;
+mod:         |              ;
+nop          |  lwu s0,(a2) ;
+~exists (1:s0=nop /\ 1:s1=1)
+(* 
+if we see store in s1, then store to mod is before store to x
+this means we can't reorder stores when the older one is to instruction memory?
+*)

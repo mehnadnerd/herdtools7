@@ -1,4 +1,6 @@
-RISCV fetchtoexecute
+RISCV IDC.fetchtoexecute
+Variant=self
+CacheType=IDC
 { 0:t0=instr:"lw s9, 0(a3)"; 0:a1=P1:mod; 1:a1=P1:mod;
   0:t2=1;                    0:a3=z; 1:a3=z; 1:s9=0; }
 P0           | P1           ;

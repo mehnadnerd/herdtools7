@@ -165,7 +165,7 @@ module
         (ConcreteVector _|ConcreteRecord _|Symbolic _|
          Tag _|PteVal _|AddrReg _|Instruction _|Frozen _ as x)
       ->
-        Warn.user_error "Illegal operation on %s" (Cst.pp_v x)
+        Warn.user_error "Illegal operation bit_at on %s" (Cst.pp_v x)
     | Var _ -> raise Undetermined
 
   let pp_unop = Op.pp_op1 true ArchOp.pp_op1
@@ -175,7 +175,7 @@ module
     | Val (Concrete i1) ->
         Val (Concrete (op i1))
     | Val (ConcreteVector _|ConcreteRecord _|Symbolic _|Tag _|PteVal _|AddrReg _|Frozen _ as x) ->
-        Warn.user_error "Illegal operation %s on %s"
+        Warn.user_error "Illegal operation unop %s on %s"
           (pp_unop op_op) (Cst.pp_v x)
     | Val (Instruction _ as x) ->
       Warn.warn_always "FIXME: operation %s on %s suspicious with -variant self"
@@ -188,7 +188,7 @@ module
       Val (Concrete (op i1 i2))
   | Val c1, Val c2 ->
       Warn.user_error
-        "Illegal operation %s on constants %s and %s"
+        "Illegal operation binop %s on constants %s and %s"
         (Op.pp_op op_op ArchOp.pp_op) (Cst.pp_v c1) (Cst.pp_v c2)
   | (Var _,_)|(_,Var _)
     -> raise Undetermined
@@ -215,7 +215,7 @@ module
     | Val (Symbolic (Virtual {cap=c;_})) ->
         Val (Concrete (op (scalar_of_cap c)))
     | Val cst ->
-        Warn.user_error "Illegal operation %s on %s"
+        Warn.user_error "Illegal operation unop_c %s on %s"
           (pp_unop op_op) (Cst.pp_v cst)
     | Var _ -> raise Undetermined
 
@@ -226,7 +226,7 @@ module
   | (Val (Symbolic (Virtual ({cap=c;_} as s))),Val (Concrete i)) ->
       Val (Symbolic (Virtual {s with cap=cap_of_scalar (op (scalar_of_cap c) i)}))
   | Val cst1,Val cst2 ->
-        Warn.user_error "Illegal operation %s on %s and %s"
+        Warn.user_error "Illegal operation binop_cs_c %s on %s and %s"
           (Op.pp_op op_op ArchOp.pp_op) (Cst.pp_v cst1) (Cst.pp_v cst2)
   | (Var _,_)|(_,Var _)
     -> raise Undetermined
@@ -238,7 +238,7 @@ module
   | (Val (Concrete i),Val (Symbolic (Virtual {cap=c;_}))) ->
       Val (Concrete (op i (scalar_of_cap c)))
   | Val cst1,Val cst2 ->
-        Warn.user_error "Illegal operation %s on %s and %s"
+        Warn.user_error "Illegal operation binop_c_cs %s on %s and %s"
           (Op.pp_op op_op ArchOp.pp_op) (Cst.pp_v cst1) (Cst.pp_v cst2)
   | (Var _,_)|(_,Var _)
     -> raise Undetermined
@@ -260,7 +260,7 @@ module
       mk_val_virtual
         {s with cap=cap_of_scalar (op (scalar_of_cap c1) (scalar_of_cap c2))}
   | Val cst1,Val cst2 ->
-        Warn.user_error "Illegal operation %s on %s and %s"
+        Warn.user_error "Illegal operation binop_cs_cs %s on %s and %s"
           (Op.pp_op op_op ArchOp.pp_op) (Cst.pp_v cst1) (Cst.pp_v cst2)
   | (Var _,_)|(_,Var _)
     -> raise Undetermined
@@ -278,7 +278,7 @@ module
   | (Val (Symbolic (Virtual {cap=c1;_})),Val (Symbolic (Virtual {cap=c2;_}))) ->
       Val (Concrete (op (scalar_of_cap c1) (scalar_of_cap c2)))
   | Val cst1,Val cst2 ->
-        Warn.user_error "Illegal operation %s on %s and %s"
+        Warn.user_error "Illegal operation cs_cs_c %s on %s and %s"
           (Op.pp_op op_op ArchOp.pp_op) (Cst.pp_v cst1) (Cst.pp_v cst2)
   | (Var _,_)|(_,Var _)
     -> raise Undetermined

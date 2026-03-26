@@ -93,7 +93,7 @@ let M = anyM
 if variant "self" 
 (*let ir1 = [I];po;[M]*) (* I think this is OK for coherent I$ *)
 let ir1 = [I];(iico_data|iico_ctrl|rf-reg)+ (* Fetch-to-execute *)(* Is this sufficient? This might need more, maybe thsi is jsut dtrm? *)
-and ir2 = [I];po;[I] (* In-order-fetch *) (* Hypothesis is that removing this is sufficient to handle incoherent I$ *)
+and ir2 = if "DIC" then [I];po;[I] else 0 (* In-order-fetch *) (* Hypothesis is that removing this is sufficient to handle incoherent I$ *)
 and ir3 = [M];fencerel(Fence.i);[I] (* Effect of fence.i *)
 
 let ippo = 0

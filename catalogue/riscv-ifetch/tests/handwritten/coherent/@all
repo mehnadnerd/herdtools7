@@ -1,0 +1,32 @@
+inorderfetch.litmus
+instructioncoherence.litmus
+# miniJit01.litmus # needs jr
+miniJit03.litmus
+MP.FF+po.litmus
+# MP.FW+po.litmus # needs fetch of nonmod insts
+# MP.WW+irf+po.litmus # needs fetch of nonmod insts
+# MP.WWW+irf+po.litmus # needs fetch of nonmod insts
+DIC.basicfencei.litmus
+DIC.dcc2.litmus
+DIC.dcc2allow.litmus
+DIC.dcc2nofence.litmus
+# DIC.fenceiMP.litmus # needs fetch of nonmod insts
+DIC.fetchtoexecute.litmus
+DIC.fetchtoexecutechained.litmus
+DIC.instructionfromread.litmus
+DIC.instructionfromread2.litmus
+DIC.instructionreadfrom.litmus
+DIC.nobackwards.litmus
+DIC.notguaranteed.litmus
+DIC.yesallowed.litmus
+# DIC.LB.RF.litmus # needs fetch of nonmod insts
+DIC.MP.FF+fencei.litmus
+# DIC.MP.FR+fencei.litmus # needs fetch of nonmod insts
+DIC.MP.FW+po.litmus
+DIC.MP.RF+fencei.litmus
+DIC.MP.WW+irf.litmus
+# DIC.S.RF+fencei.litmus # needs jr
+DIC.SB+fencei.litmus
+DIC.SB+nosync.litmus
+DIC.SB.RF+fencei.litmus
+# DIC.WRC-inst.litmus needs jr

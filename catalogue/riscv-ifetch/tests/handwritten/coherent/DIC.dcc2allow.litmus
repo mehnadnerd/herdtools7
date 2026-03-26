@@ -1,0 +1,15 @@
+RISCV DIC.dcc2allow
+Variant=self
+CacheType=DIC
+{ 0:t0=nop;       0:a1=P1:mod; 1:a1=P1:mod;
+  0:t2=1; 1:t2=0; 0:a3=z; 1:a3=z; 1:s9=0; }
+P0           | P1           ;
+sw t0,0(a1)  |  lw s0,0(a3) ;
+fence w,w    |  fence.i     ;
+sw t2,0(a3)  | mod:         ;
+             |  j end       ;
+             |  li s9, 1    ;
+             | end:         ;  
+
+exists 1:s0=0 /\ 1:s9=1
+(* This is allowed on AArch64 but forbidden on RISCV, fence.i is after all previous loads and stores *)

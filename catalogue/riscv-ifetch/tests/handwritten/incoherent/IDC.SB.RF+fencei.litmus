@@ -1,0 +1,14 @@
+RISCV IDC.SB.RF+fencei
+Variant=self
+CacheType=IDC
+{ 0:t0=instr:"li s1, 1"; 0:a1=P1:mod; 
+  1:t1=1; 0:a3=z; 1:a3=z; }
+P0           | P1           ;
+sw t0,0(a1)  |  sw t1,0(a3) ;
+fence w,r    |  fence.i     ;
+lw s0,0(a3)  | mod:         ;
+             |  nop         ;
+~exists (0:s0=0 /\ 1:s1=0)
+(* Store buffering, with one thread using fence.i+fetch  *)
+(* Based on SB.RF *)
+

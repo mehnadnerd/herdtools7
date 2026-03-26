@@ -322,6 +322,7 @@ type 'k kinstruction =
   | Op of op * reg * reg * reg
   | OpW of opw * reg * reg * reg
   | J of lbl
+  | JR of reg
   | Bcc of cond * reg * reg * lbl
   | Load of width * signed * mo * reg * int * reg
   | Store of width * mo * reg * int * reg
@@ -380,6 +381,8 @@ let do_pp_instruction m = function
         (pp_opw op) (pp_reg r1) (pp_reg r2) (pp_reg r3)
   | J lbl ->
       sprintf "j %s" (pp_label lbl)
+  | JR r ->
+      sprintf "jr %s" (pp_reg r)
   | Bcc (cond,r1,r2,lbl) ->
       sprintf  "%s %s,%s,%s"
         (pp_bcc cond) (pp_reg r1) (pp_reg r2) (pp_label lbl)
@@ -439,6 +442,7 @@ let fold_regs (f_reg,f_sreg) =
 
   fun c ins -> match ins with
   | INop|Ret|J _ | FenceIns _ -> c
+  | JR (r1)
   | Li (r1,_)
   | OpA (_,r1,_) | AUIPC (r1,_) | OpI2 (_,r1,_) -> fold_reg r1 c
   | OpI (_,r1,r2,_) | OpIW (_,r1,r2,_)
@@ -461,6 +465,7 @@ let map_regs f_reg f_symb =
 
   function ins -> match ins with
   | INop|Ret|J _ | FenceIns _ -> ins
+  | JR (r) -> JR (map_reg r)
   | Li (r,k) -> Li (map_reg r,k)
   | OpI (op,r1,r2,k) ->
       OpI (op,map_reg r1,map_reg r2,k)
@@ -498,6 +503,7 @@ let map_addrs _f ins = ins
 
 let get_next = function
   | J lbl -> [Label.To lbl;]
+  | JR reg -> [Label.Next;] (* TODO brs make this work *)
   | Bcc (_,_,_,lbl) -> [Label.Next; Label.To lbl;]
   | INop|Ret|Li _|OpI (_, _, _, _)|OpIW (_, _, _, _)|Op (_, _, _, _)|OpW (_, _, _, _) | OpA (_,_,_) | AUIPC (_,_)
   | OpI2 (_,_,_)
@@ -519,7 +525,7 @@ module PseudoI = struct
       | OpI2 (op,r1,k) -> OpI2 (op,r1,k_tr k)
       | OpIW (op,r1,r2,k) -> OpIW (op,r1,r2,k_tr k)
       |AUIPC (r1, k) -> AUIPC (r1,k_tr k)
-      | Op (_, _, _, _)|OpW (_, _, _, _)|J _|Bcc (_, _, _, _)
+      | Op (_, _, _, _)|OpW (_, _, _, _)|J _|JR _|Bcc (_, _, _, _)
       |INop | Ret | Li _ | OpA (_,_,_)
       |Load (_, _, _, _, _, _)|Store (_, _ ,_ , _, _)
       | Ext (_,_,_,_)
@@ -538,7 +544,7 @@ module PseudoI = struct
         | OpI (_, _, _, _)|OpIW (_, _, _, _)|Op (_, _, _, _)
         | OpI2 (_,_,_)
         | OpA (_,_,_) | AUIPC (_,_) | Ext (_,_,_,_)
-        | OpW (_, _, _, _)|J _|Bcc (_, _, _, _)|FenceIns _
+        | OpW (_, _, _, _)|J _|JR _|Bcc (_, _, _, _)|FenceIns _
           -> 0
 
       let size_of_ins _ = 4
@@ -547,6 +553,7 @@ module PseudoI = struct
         | J lbl
         | Bcc (_,_,_,lbl) | OpA (_,_,lbl)
           -> f k lbl
+        | JR _
         | INop
         | Ret
         | Li _
@@ -560,6 +567,7 @@ module PseudoI = struct
         | Bcc (cc,r1,r2,lbl) ->
            Bcc (cc,r1,r2,BranchTarget.as_string_fun f lbl)
         | OpA (op,r1,lbl) -> OpA (op,r1,BranchTarget.as_string_fun f lbl)
+        |JR _
         |INop
         |Ret
         |Li _

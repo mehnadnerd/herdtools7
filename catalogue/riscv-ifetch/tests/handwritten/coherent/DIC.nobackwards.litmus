@@ -1,0 +1,11 @@
+RISCV DIC.nobackwards
+Variant=self
+CacheType=DIC
+{ 0:t0=instr:"nop"; 0:a1=P1:mod; }
+P0           ;
+mod:         ;
+li t1, 1     ;
+sw t0,0(a1)  
+~exists 1:t1=0
+(* We can't fetch an instruction before it has  *)
+(* Based on CoFW *)

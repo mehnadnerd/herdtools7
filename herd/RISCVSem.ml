@@ -306,6 +306,7 @@ module
               fun v -> write_reg r1 v ii >>= B.next1T
 
           | RISCV.J lbl -> B.branchT lbl
+          | RISCV.JR r -> B.next1T ()
           | RISCV.Bcc (cond,r1,r2,lbl) ->
               (read_reg_ord r1 ii >>| read_reg_ord r2 ii) >>=
               fun (v1,v2) -> M.op (tr_cond cond) v1 v2 >>=
@@ -417,7 +418,7 @@ module
                     end
         else
           do_build_semantics test orig_inst ii
-
+        (* TODO brs: this is resulting in not generating fetch events for non-CMODX instructions *)
       let build_semantics test ii =
         M.addT (A.next_po_index ii.A.program_order_index)
           begin

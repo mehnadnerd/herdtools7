@@ -1,4 +1,6 @@
-RISCV fenceiMP
+RISCV DIC.fenceiMP
+Variant=self
+CacheType=DIC
 {                 0:a1=x; 1:a1=x;
   0:t0=1; 0:a3=z; 1:a3=z; 1:s9=0; }
 P0           | P1           ;

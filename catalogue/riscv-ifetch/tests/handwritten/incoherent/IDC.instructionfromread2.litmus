@@ -1,0 +1,12 @@
+RISCV IDC.instructionreadfrom2
+Variant=self
+CacheType=IDC
+{ 0:t0=instr:"li s9, 1"; 0:a1=P1:mod; 1:a1=P1:mod; }
+P0           | P1           ;
+sw t0,0(a1)  | lwu t0,0(a1) ;
+             | fence.i      ;
+             | mod:         ;
+             |  nop         ;
+~exists 1:t0=instr:"li s9, 1" /\ 1:s9=0
+(* We observe it on the data side, then we must see on instruciton side after a fence.i, applies when incoherent *)
+(* Equivalente of 2SM.B *)

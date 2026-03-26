@@ -1,0 +1,19 @@
+RISCV miniJit03
+Variant=self
+CacheType=DIC
+{ 
+0:a0=P1:L1; 0:t0=instr:"j L1"; 0:a1=P1:L2; 0:t2=instr:"li s0, 3";
+1:s0=0;}
+P0           | P1           ;
+sw t2,0(a0)  | L2:          ;
+fence w,w    |  j  L0       ;
+sd t0,0(a1)  | L0:          ;
+             |  li s0, 1    ;
+             |  j L3        ;
+             | L1:          ;
+             |  li s0, 2    ;
+             | L3:          ;
+~exists (1:s0=2)
+(* Coherence needed so that we will eventually see the instruction update and in-order fetch *)
+(* This enforces ordering woot! it is bacially MP.FF+po *)
+(* Based on miniJit01 w/modifications *)

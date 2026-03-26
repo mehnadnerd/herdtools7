@@ -19,6 +19,7 @@ include "cos-opt.cat"
 (**********)
 
 (* Sc per location *)
+let po-loc = [Exp];po-loc;[Exp] in
 acyclic co|rf|fr|po-loc as Coherence
 
 (* Main model axiom *)

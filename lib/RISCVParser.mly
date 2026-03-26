@@ -42,6 +42,7 @@ let tr_rw = function
 %token <RISCVBase.op> OP
 %token <RISCVBase.opw> OPW
 %token J
+%token JR
 %token <RISCVBase.cond> BCC
 %token <RISCVBase.width * RISCVBase.signed * RISCVBase.mo > LOAD
 %token <RISCVBase.width * RISCVBase.mo> STORE
@@ -140,6 +141,8 @@ instr:
   { RISCVBase.OpW ($1,$2,$4,$6) }
 | J NAME
     { RISCVBase.J $2 }
+| JR reg
+    { RISCVBase.JR $2 }
 | BCC reg COMMA reg COMMA NAME
     { RISCVBase.Bcc ($1,$2,$4,$6) }
 | MV reg COMMA reg

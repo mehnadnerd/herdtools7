@@ -1,4 +1,6 @@
-RISCV fetchtoexecute
+RISCV DIC.fetchtoexecutechained
+Variant=self
+CacheType=DIC
 { 
   int x=2;
   0:t0=instr:"mv a3, t1"; 0:a1=P1:mod; 1:a1=P1:mod;

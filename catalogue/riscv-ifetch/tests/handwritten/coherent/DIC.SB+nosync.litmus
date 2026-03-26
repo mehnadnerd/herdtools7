@@ -1,0 +1,11 @@
+RISCV DIC.SB+fencei
+Variant=self
+CacheType=DIC
+{ 0:t0=instr:"li s0, 1"; 0:a1=P1:mod1; 
+  1:t0=instr:"li s0, 1"; 1:a1=P0:mod0; }
+P0           | P1           ;
+ sw t0,0(a1) |  sw t0,(a1)  ;
+mod0:        | mod1:        ;
+ nop         |  nop         ;
+exists (0:s0=0 /\ 1:s0=0)
+(* Store buffering with no sync,d fetching on both *)

@@ -61,6 +61,7 @@ open RISCVParser
     | "sraw" -> OPW SRAW
 
     | "j" -> J
+    | "jr" -> JR
     | "beq" -> BCC EQ
     | "bne" -> BCC NE
     | "blt" -> BCC LT

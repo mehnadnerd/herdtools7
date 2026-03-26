@@ -1,0 +1,9 @@
+RISCV DIC.instructionfromread
+Variant=self
+CacheType=DIC
+{ 0:t0=instr:"lwu s9, 0(a1)"; 0:a1=P1:mod; 1:a1=P1:mod; }
+P0           | P1           ;
+sw t0,0(a1)  | mod:         ;
+             |  nop         ;
+~exists 1:s9=instr:"nop"
+(* After we've fetched new, we must see it on data side (should wokr even incoherent) *)
