@@ -153,6 +153,9 @@ module Make(A:Arch_herd.S) =
          } = t in
 
       let prog,starts,rets = Load.load nice_prog in
+      let dummywriteaav = A.V.cstToV (Constant.mk_sym_virtual_label 99 "dummyifetchloc") in
+      let dummyinitwrite = (A.Location_global dummywriteaav,((TestType.Ty "int"),A.V.zero)) in
+      let init = if (A.arch == Archs.riscv) then dummyinitwrite::init else init in (* TODO brs figure out how to restrict to variant ifetch *)
       (* ensure labels in the init list are present in the body of the test*)
       List.iter (fun (_,(_,v)) ->
         let open Constant in

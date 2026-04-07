@@ -263,6 +263,9 @@ module
       let make_label_value proc lbl_str =
         A.V.cstToV (Constant.mk_sym_virtual_label proc lbl_str)
 
+      let make_dummy_ifetchloc =
+        A.V.cstToV (Constant.mk_sym_virtual_label 99 "dummyifetchloc")
+
       let read_loc_instr a ii =
         M.read_loc Port.No (mk_fetch RISCVAnnot.N) a ii
 
@@ -416,9 +419,20 @@ module
                       (* Just end program since exceptions aren't implemented *)
                       M.unitT B.Exit
                     end
-        else
-          do_build_semantics test orig_inst ii
-        (* TODO brs: this is resulting in not generating fetch events for non-CMODX instructions *)
+        else (* This isn't a CMODX'd instruction, but we need to create a fetch event for it *)
+          let(>>*=) = M.bind_control_set_data_input_first in
+          let a_v = make_dummy_ifetchloc in
+          let a = (* Normalised address of instruction *)
+            A.Location_global a_v in
+            (
+            read_loc_instr a ii
+            >>=
+            fun _ -> (* Here is where actual_val would be *)
+              M.op Op.Eq (V.instructionToV orig_inst) (V.instructionToV orig_inst) >>==
+                fun cond -> M.choiceT cond
+                  (commit_pred ii >>*=
+                    fun () -> do_build_semantics test orig_inst ii)
+                    (M.unitT B.Exit))
       let build_semantics test ii =
         M.addT (A.next_po_index ii.A.program_order_index)
           begin

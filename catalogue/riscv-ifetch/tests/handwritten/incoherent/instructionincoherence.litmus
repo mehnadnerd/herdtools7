@@ -1,0 +1,17 @@
+RISCV instructionincoherence
+Variant=self
+CacheType=IDC
+{ 0:t0=instr:"addi t1,t1,2";
+  0:a3=P1:mod; }
+P0           | P1            ;
+sw t0,0(a3)  |  li t0, 2     ;
+             |  li t1, 0     ;
+             | loop:         ;
+             |  slli t1,t1,4 ;
+             | mod:          ;
+             |  addi t1,t1,1 ;
+             |  addi t0,t0,-1;
+             |  bne  t0,zero,loop ;  
+exists 1:t1=33
+(* Wwant to read from a location twice on fetch and make sure can go back on incoherent I$ *)
+(* We are adding a nibble each loop, we can see 0x11, 0x12, 0x22, or 0x21 *)
