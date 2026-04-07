@@ -8,5 +8,6 @@ sw t1,0(a2)  | mod:         ;
 fence w,w    |  li s0, 1    ;
 sw t0,0(a1)  |  fence.i     ;
              |  lw s1,(a2)  ;
-~exists (1:s0=0 /\ 1:s1=1)
+~exists (1:s0=0 /\ 1:s1=0)
 (* Message passing with fetch->fence.i=>load  *)
+(* The fence.i is irrelevant here b/c doesn't order prior fetches, the po is what is important *)

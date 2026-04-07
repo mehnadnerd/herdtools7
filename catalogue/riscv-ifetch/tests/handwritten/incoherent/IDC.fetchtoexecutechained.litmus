@@ -11,6 +11,7 @@ fence w,w    |              ;
 sw t0,0(a1)  | mod:         ;
              |  mv a3, t0   ;
              |  lw s9, 0(a3);
-~exists 1:s9=0
-(* Test for fetch of an instruction being before its execution, including when we launder it a bit *)
-(* We should either do the li and move 2, or do the lw in which case we must have seen the store of 1 *)
+exists 1:s9=0
+(* Test for fetch of an instruction being before its execution not applying when laundered through registers *)
+(* We would either do the li and move 2, or do the lw in which case we would have seen the store of 1 *)
+(* We are allowed to value-predict a3 and so there is no dependency *)

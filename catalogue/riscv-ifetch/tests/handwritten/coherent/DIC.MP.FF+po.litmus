@@ -1,4 +1,4 @@
-RISCV MP.FF+po
+RISCV DIC.MP.FF+po
 Variant=self
 CacheType=DIC
 { 0:t0=instr:"nop"; 0:a1=P1:mod0; 0:a2=P1:mod1; }

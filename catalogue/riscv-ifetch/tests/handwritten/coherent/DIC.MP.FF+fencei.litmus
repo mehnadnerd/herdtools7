@@ -10,5 +10,6 @@ sw t0,0(a1)  |  fence.i     ;
              |  li s1, 1    ;
 ~exists (1:s0=0 /\ 1:s1=1)
 (* Message passing with two fetches and a fence.i between them  *)
+(* TODO coherent only since fence.i doesn't order prior fetches *)
 
 

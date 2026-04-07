@@ -10,4 +10,3 @@ sw t0,0(a3)  |  lw s9,0(a1) ;
 
 ~exists 1:s0=1 /\ 1:s9=0
 (* Using fence.i as a fence r,r *)
-(* TODO needs non-modified fetch *)

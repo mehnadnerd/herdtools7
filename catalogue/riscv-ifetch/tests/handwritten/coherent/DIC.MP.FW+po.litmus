@@ -7,6 +7,6 @@ P0           | P1           ;
 sw t1,0(a1)  | mod0:        ;
 fence w,w    |  nop         ;
 sw t0,0(a3)  |  sw t2,0(a1) ;
-exists (1:s0=1 /\ x=1)
+~exists (1:s0=1 /\ x=1)
 (* Message passing with fetch->store, if coherent *)
 (* TODO has same issue as LB.RF where fetch of sw t2 is not modelled *)

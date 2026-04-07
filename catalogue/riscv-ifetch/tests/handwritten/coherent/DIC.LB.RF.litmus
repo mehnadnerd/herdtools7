@@ -13,5 +13,3 @@ sw t2,0(a3)  |  sw t1,0(a1) ;
 (* But the fetch of mod must be before the fetch of P1's store since fetches are in order *)
 (* And since the fetch of the store is before the execution, the fetch of mod must be before P0's store transitively *)
 (* But to read 1 on P1, it must read-from P0's store, so we have a loop *)
-
-(* TODO doesn't work because fetch of sw isn't modeled here *)

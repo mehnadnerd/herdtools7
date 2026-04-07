@@ -12,5 +12,4 @@ sw t0,0(a1)  | mod:         ;
              |  mv a3, t0   ;
              |  lw s9, 0(a3);
 ~exists 1:s9=0
-(* Test for fetch of an instruction being before its execution, including when we launder it a bit *)
-(* We should either do the li and move 2, or do the lw in which case we must have seen the store of 1 *)
+(* This test works coherently because teh fetch of mod needs to be before the fetch of lw and hence the load *)

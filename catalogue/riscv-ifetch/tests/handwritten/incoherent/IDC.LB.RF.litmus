@@ -2,7 +2,7 @@ RISCV IDC.LB.RF
 Variant=self
 CacheType=IDC
 { 0:t2=instr:"li s1,1"; 0:a3=P1:mod; 1:a3=P1:mod;
-  1:t1=1;               0:a1=x; 1:a1=x; dummyifetchloc=0; }
+  1:t1=1;               0:a1=x; 1:a1=x; }
 P0           | P1           ;
 lw t0,0(a1)  | mod:         ;
 fence r,w    |  nop         ;
