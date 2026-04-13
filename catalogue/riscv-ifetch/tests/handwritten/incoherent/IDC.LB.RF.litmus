@@ -8,10 +8,3 @@ lw t0,0(a1)  | mod:         ;
 fence r,w    |  nop         ;
 sw t2,0(a3)  |  sw t1,0(a1) ;
 exists (0:t0=1 /\ 1:s1=1)
-(* This is allowed on AArch64 even w/ coherent I$, but I think it should be banned by coherent RISCV  *)
-(* I think it should be banned since P0 can see 1 iff P1's store happens before P0's load, and hence P0's store *)
-(* But the fetch of mod must be before the fetch of P1's store since fetches are in order *)
-(* And since the fetch of the store is before the execution, the fetch of mod must be before P0's store transitively *)
-(* But to read 1 on P1, it must read-from P0's store, so we have a loop *)
-
-(* This is incoherent so it is fine *)

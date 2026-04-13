@@ -1,0 +1,17 @@
+RISCV IDC.emailQ2
+Variant=self
+CacheType=IDC
+{ 
+0:a0=P0:mod; 0:t0=instr:"addi a1,a2,0";
+1:a0=P0:mod; 1:t1=1;
+0:a1=y;1:a1=x; 0:a2=x;
+}
+P0           | P1           ;
+ sw t0,0(a0) | sw t1,0(a1)  ;
+mod:         |              ;
+ nop         | fence rw,rw  ;
+ lwu s0,0(a1)| lwu s1,0(a0) ;
+
+exists (0:s0=0 /\ 1:s1=instr:"nop" /\ 0:a1=x)
+(* Currently allowed since we only do dependencies to same instruction *)
+(* If we did dtrm this would be banned *)

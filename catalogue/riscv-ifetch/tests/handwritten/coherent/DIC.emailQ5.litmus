@@ -1,0 +1,17 @@
+RISCV DIC.emailQ5
+Variant=self
+CacheType=DIC
+{ 
+0:a0=P0:mod; 0:t0=instr:"sw t1,0(a1)";
+1:a0=P0:mod; 0:t1=1; 1:t1=1; 1:t2=2;
+0:a1=y;1:a1=y;
+}
+P0           | P1           ;
+ sw t0,0(a0) | sw t2,0(a1)  ;
+mod:         |              ;
+ nop         | fence rw,rw  ;
+ lw s0,0(a1) | lwu s0,0(a0) ;
+
+~exists (1:s0=instr:"nop" /\ 0:s0=1 /\ y=2)
+(* We are checking whether or not P0's first store *)
+(* is before its first load *)

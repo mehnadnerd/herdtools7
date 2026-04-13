@@ -1,0 +1,20 @@
+RISCV IDC.emailQ3
+Variant=self
+CacheType=IDC
+{ 
+0:a0=P0:mod; 0:t0=instr:"j next";
+1:a0=P0:mod; 1:t1=1;
+0:a1=x;1:a1=x;
+0:s0=99;
+}
+P0           | P1           ;
+ sw t0,0(a0) | sw t1,0(a1)  ;
+mod:         |              ;
+ j over      | fence rw,rw  ;
+next:        |              ;
+ lwu s0,0(a1)| lwu s1,0(a0) ;
+over:        |              ;
+
+exists (0:s0=0 /\ 1:s1=instr:"j over")
+(* nothing orders fetch of mod relative to fetch of next *)
+
