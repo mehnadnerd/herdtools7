@@ -116,12 +116,22 @@ module Make(V:Constant.S)(C:Arch_litmus.Config) =
         { empty_ins with
           memo = sprintf "j %s" (A.Out.dump_label (tr_lab lbl));
           branch=[Branch lbl;] }::k
+    | JAL lbl ->
+        { empty_ins with
+          memo = sprintf "jal %s" (A.Out.dump_label (tr_lab lbl));
+          branch=[Branch lbl;] }::k
     | JR r1 ->
         let fmt1,r1 = tr_1i r1 in
         {
           empty_ins with
           memo = sprintf "jr %s" (fmt1);
-          inputs=r1; branch=[Next]; }::k
+          inputs=r1; branch=[Any]; clobbers=[Ireg X1]; }::k
+    | JALR r1 ->
+        let fmt1,r1 = tr_1i r1 in
+        {
+          empty_ins with
+          memo = sprintf "jalr %s" (fmt1);
+          inputs=r1; branch=[Any]; clobbers=[Ireg X1]; }::k
   | Bcc (cond,r1,r2,lbl) ->
       let fmt1,fmt2,r1r2 = tr_2i r1 r2 in
       { empty_ins with

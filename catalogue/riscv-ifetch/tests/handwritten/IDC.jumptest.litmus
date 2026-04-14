@@ -1,0 +1,20 @@
+RISCV IDC.jumptest
+Variant=self
+CacheType=IDC
+{ 0:a0=P0:L1; 0:a1=P0:L2; }
+P0           ;
+li s1, 1     ;
+Lstart:      ;
+jal L0       ;
+Ltarget0:    ;
+li s1, 2     ;
+L0:          ;
+mv s0,ra     ;
+jr a0        ;
+L1:          ;
+jalr a1      ;
+Ltarget1:    ;
+li s1, 3     ;
+L2:          ;
+forall (0:s1=1 /\ 0:s0=label:"P0:Ltarget0" /\ 0:ra=label:"P0:Ltarget1")
+(* Test for jal, jr, and jalr working *)

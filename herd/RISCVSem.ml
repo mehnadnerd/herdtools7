@@ -247,9 +247,49 @@ module
               | AMOSWAP -> M.linux_exch | _ -> M.amo (tr_opamo op))
                 ra rv rmem wmem >>= fun r -> write_reg rd r ii in
             amo mo
+      
+      let get_ra test ii =
+        let lbl =
+          let a = ii.A.addr + 4 in
+          let lbls = test.Test_herd.entry_points a in
+          Label.norm lbls in
+        match lbl with
+        | Some l -> ii.A.addr2v l
+        | None ->  V.intToV (ii.A.addr + 4)
 
+      let v2tgt =
+        let open Constant in
+        function
+        | M.A.V.Val (Symbolic (Virtual {name=Symbol.Label (_, lbl); _})) -> Some (B.Lbl lbl)
+        | M.A.V.Val (Concrete i) -> Some (B.Addr (M.A.V.Cst.Scalar.to_int i))
+        | _ -> None
+
+      let do_indirect_jump test bds i ii v =
+        match  v2tgt v with
+        | Some tgt ->
+          commit_bcc ii
+          >>= fun () -> M.unitT (B.Jump (tgt,bds))
+        | None ->
+           match v with
+           | M.A.V.Var(_) as v ->
+              let lbls = get_exported_labels test in
+              if Label.Full.Set.is_empty lbls  then begin
+                if C.variant Variant.Telechat then M.unitT () >>! B.Exit
+                else
+                  Warn.fatal "Could find no potential target for indirect branch %s \
+                    (potential targets are statically known labels)" (RISCV.dump_instruction i)
+                end
+              else
+                commit_bcc ii
+                >>= fun () -> B.indirectBranchT v lbls bds
+        | _ -> Warn.fatal
+            "illegal argument for the indirect branch instruction %s \
+            (must be a label)" (RISCV.dump_instruction i)
+      
 (* Entry point *)
       let tr_sz = RISCV.tr_width
+
+      let ra = RISCV.Ireg RISCV.X1
 
 (* Fetch of an instruction, i.e., a read from a label *)
       let mk_fetch an loc v =
@@ -270,7 +310,7 @@ module
         M.read_loc Port.No (mk_fetch RISCVAnnot.N) a ii
 
 
-      let do_build_semantics _ inst ii =
+      let do_build_semantics test inst ii =
           begin match inst with
           | RISCV.INop-> B.next1T ()
           | RISCV.Ret when O.variant Variant.Telechat -> M.unitT () >>! B.Exit
@@ -309,7 +349,9 @@ module
               fun v -> write_reg r1 v ii >>= B.next1T
 
           | RISCV.J lbl -> B.branchT lbl
-          | RISCV.JR r -> B.next1T ()
+          | RISCV.JAL lbl -> write_reg ra (get_ra test ii) ii >>= fun () -> B.branchT lbl
+          | RISCV.JR r as i -> read_reg_ord r ii >>= do_indirect_jump test [] i ii
+          | RISCV.JALR r as i -> write_reg ra (get_ra test ii) ii >>= fun () -> read_reg_ord r ii >>= do_indirect_jump test [] i ii
           | RISCV.Bcc (cond,r1,r2,lbl) ->
               (read_reg_ord r1 ii >>| read_reg_ord r2 ii) >>=
               fun (v1,v2) -> M.op (tr_cond cond) v1 v2 >>=

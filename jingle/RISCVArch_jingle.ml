@@ -49,7 +49,11 @@ include Arch.MakeArch(struct
       match_reg r1 r1' subs >>> match_const k1 k1'
   | J lbl,J lbl' ->
       add_subs [Lab (lbl,lbl')] subs
+  | JAL lbl,JAL lbl' ->
+      add_subs [Lab (lbl,lbl')] subs
   | JR (reg), JR (reg') ->
+      match_reg reg reg' subs
+  | JALR (reg), JALR (reg') ->
       match_reg reg reg' subs
   | Bcc (c,r1,r2,lbl),Bcc (c',r1',r2',lbl') when c=c' ->
       add_subs
@@ -118,8 +122,12 @@ include Arch.MakeArch(struct
           Ext (s,w,r1,r2)
       | J lbl->
           find_lab lbl >! fun lbl -> J lbl
+      | JAL lbl->
+          find_lab lbl >! fun lbl -> JAL lbl
       | JR r1 ->
           conv_reg r1 >! fun r1 -> JR (r1)
+      | JALR r1 ->
+          conv_reg r1 >! fun r1 -> JALR (r1)
       | AUIPC (r1,k) ->
           conv_reg r1 >> fun r1 ->
           find_cst k  >! fun k ->
