@@ -347,11 +347,19 @@ module
                >>| (read_reg_ord r3 ii >>= uxtw)) >>=
               fun (v1,v2) -> M.op (tr_opw op) v1 v2 >>= sxtw >>=
               fun v -> write_reg r1 v ii >>= B.next1T
-
           | RISCV.J lbl -> B.branchT lbl
-          | RISCV.JAL lbl -> write_reg ra (get_ra test ii) ii >>= fun () -> B.branchT lbl
+          | RISCV.JAL lbl -> 
+                let v_ret = get_ra test ii in
+                let write_ra = write_reg ra v_ret ii in
+                let branch () = M.unitT (B.Jump (tgt2tgt ii (BranchTarget.Lbl lbl),[ra,v_ret])) in
+                M.bind_order write_ra branch
           | RISCV.JR r as i -> read_reg_ord r ii >>= do_indirect_jump test [] i ii
-          | RISCV.JALR r as i -> write_reg ra (get_ra test ii) ii >>= fun () -> read_reg_ord r ii >>= do_indirect_jump test [] i ii
+          | RISCV.JALR r as i ->
+                let v_ret = get_ra test ii in
+                let read_rs1 = read_reg_ord r ii in
+                let branch = read_rs1 >>= do_indirect_jump test [ra,v_ret] i ii in
+                let write_ra = write_reg ra v_ret ii in
+                write_ra >>| branch >>= fun (_, b) -> M.unitT b
           | RISCV.Bcc (cond,r1,r2,lbl) ->
               (read_reg_ord r1 ii >>| read_reg_ord r2 ii) >>=
               fun (v1,v2) -> M.op (tr_cond cond) v1 v2 >>=
