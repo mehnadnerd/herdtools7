@@ -1,6 +1,6 @@
-RISCV miniJit01
+RISCV IDC.miniJit01
 Variant=self
-CacheType=DIC
+CacheType=IDC
 { 
 [x] = P1:L0;
 0:a0=P0:L1; 0:a1=x; 0:t2=instr:"li s0, 3";
@@ -18,4 +18,3 @@ exists (1:s0=2)
 (* Coherence needed so that we will eventually see the instruction update *)
 (* Just because we do the address update after the instruction update doesn't mean we are guaranteed to see new *)
 (* Based on miniJit01 *)
-(* TODO brs doesn't work because jr doesn't work *)

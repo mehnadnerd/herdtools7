@@ -1,4 +1,4 @@
-RISCV instructioncoherence
+RISCV DIC.instructioncoherence
 Variant=self
 CacheType=DIC
 { 0:t0=instr:"addi t1,t1,2"; 0:a3=P1:mod; }

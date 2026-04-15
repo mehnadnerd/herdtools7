@@ -1,4 +1,4 @@
-RISCV inorderfetch
+RISCV DIC.inorderfetch
 Variant=self
 CacheType=DIC
 { 0:t0=nop; 0:a1=P1:mod1;

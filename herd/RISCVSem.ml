@@ -83,7 +83,10 @@ module
       let (>>!) = M.(>>!)
       let (>>::) = M.(>>::)
 
-      let sxt_op sz = M.op1 (Op.Sxt sz)
+      let sxt_op sz = 
+        match sz with
+        | MachSize.Quad -> M.op1 (Op.Mask sz) (* 64-bit sign extension is same as 64-bit zext on RV64 *)
+        | _ -> M.op1 (Op.Sxt sz)
       and uxt_op sz = M.op1 (Op.Mask sz)
 
       let sxtw = sxt_op MachSize.Word

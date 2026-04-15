@@ -1,7 +1,3 @@
-inorderfetch.litmus
-instructioncoherence.litmus
-# miniJit01.litmus # needs jr
-miniJit03.litmus
 DIC.MP.FF+po.litmus
 DIC.MP.WW+irf+po.litmus
 DIC.MP.WWW+irf+po.litmus
@@ -12,6 +8,8 @@ DIC.dcc2nofence.litmus
 DIC.fenceiMP.litmus
 DIC.fetchtoexecute.litmus
 DIC.fetchtoexecutechained.litmus
+DIC.inorderfetch.litmus
+DIC.instructioncoherence.litmus
 DIC.instructionfromread.litmus
 DIC.instructionfromread2.litmus
 DIC.instructionreadfrom.litmus
@@ -19,13 +17,15 @@ DIC.nobackwards.litmus
 DIC.notguaranteed.litmus
 DIC.yesallowed.litmus
 DIC.LB.RF.litmus
+DIC.miniJit01.litmus
+DIC.miniJit03.litmus
 DIC.MP.FF+fencei.litmus
 DIC.MP.FR+fencei.litmus
 DIC.MP.FW+po.litmus
 DIC.MP.RF+fencei.litmus
 DIC.MP.WW+irf.litmus
-# DIC.S.RF+fencei.litmus # needs jr
+DIC.S.RF+fencei.litmus
 DIC.SB+fencei.litmus
 DIC.SB+nosync.litmus
 DIC.SB.RF+fencei.litmus
-# DIC.WRC-inst.litmus needs jr
+DIC.WRC-inst.litmus

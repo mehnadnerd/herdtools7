@@ -1,4 +1,4 @@
-RISCV instructionincoherence
+RISCV IDC.instructionincoherence
 Variant=self
 CacheType=IDC
 { 0:t0=instr:"addi t1,t1,2";

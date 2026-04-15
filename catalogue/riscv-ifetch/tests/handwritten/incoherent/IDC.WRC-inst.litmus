@@ -11,6 +11,7 @@ mod:         |             |  jalr a1    ;
  nop         |             |             ;
  jr ra       |             |             ; 
 end:         |             |             ;
-~exists(1:s0=1 /\ 2:s2=1 /\ 2:s0=0)
+exists(1:s0=1 /\ 2:s2=1 /\ 2:s0=0)
 (* Can P1 see the new instructions but *)
-(* P2 not? *)
+(* P2 not? -- yes on incoherent since *)
+(* P1 new fetch not ordered before flag write *)

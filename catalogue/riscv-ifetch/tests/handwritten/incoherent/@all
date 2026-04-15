@@ -8,17 +8,19 @@ IDC.fetchtoexecute.litmus
 IDC.fetchtoexecutechained.litmus
 IDC.instructionfromread.litmus
 IDC.instructionfromread2.litmus
+IDC.instructionincoherence.litmus
 IDC.instructionreadfrom.litmus
 IDC.nobackwards.litmus
 IDC.notguaranteed.litmus
 IDC.yesallowed.litmus
 IDC.LB.RF.litmus
+IDC.miniJit01.litmus
 IDC.MP.FF+fencei.litmus
 IDC.MP.FR+fencei.litmus
 IDC.MP.RF+fencei.litmus
 IDC.MP.WW+irf.litmus
-# IDC.S.RF+fencei.litmus # TODO needs jr
+IDC.S.RF+fencei.litmus
 IDC.SB+fencei.litmus
 IDC.SB+nosync.litmus
 IDC.SB.RF+fencei.litmus
-# IDC.WRC-inst.litmus # TODO needs jr
+IDC.WRC-inst.litmus

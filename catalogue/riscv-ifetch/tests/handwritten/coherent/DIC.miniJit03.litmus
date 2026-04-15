@@ -1,4 +1,4 @@
-RISCV miniJit03
+RISCV DIC.miniJit03
 Variant=self
 CacheType=DIC
 { 
