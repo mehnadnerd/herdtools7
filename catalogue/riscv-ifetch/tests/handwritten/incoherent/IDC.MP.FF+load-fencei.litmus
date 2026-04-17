@@ -1,14 +1,14 @@
-RISCV IDC.MP.FF+fencei
+RISCV IDC.MP.FF+load-fencei
 Variant=self
 CacheType=IDC
-{ 0:t0=instr:"nop"; 0:a1=P1:mod0; 0:a2=P1:mod1; }
+{ 0:t0=instr:"lw s0,(a3)"; 0:a1=P1:mod0; 0:a2=P1:mod1; 1:a3=x; x=2; }
 P0           | P1           ;
 sw t0,0(a2)  | mod0:        ;
 fence w,w    |  li s0, 1    ;
 sw t0,0(a1)  |  fence.i     ;
              | mod1:        ;
              |  li s1, 1    ;
-exists (1:s0=0 /\ 1:s1=1)
+~exists (1:s0=0 /\ 1:s1=1)
 (* Message passing with two fetches and a fence.i between them  *)
-(* This version allows reordering since thet patched instruction isn't a load *)
+(* This version doesn't allow reordering since we patch in a load *)
 
