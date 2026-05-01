@@ -8,7 +8,7 @@ fence w,w    |  li s0, 1    ;
 sw t0,0(a1)  |  fence.i     ;
              | mod1:        ;
              |  li s1, 1    ;
-~exists (1:s0=0 /\ 1:s1=1)
+~exists (1:s0=2 /\ 1:s1=1)
 (* Message passing with two fetches and a fence.i between them  *)
 (* This version doesn't allow reordering since we patch in a load *)
 
