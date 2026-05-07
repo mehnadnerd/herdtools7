@@ -1,8 +1,8 @@
-RISCV DIC.miniJit03
+RISCV IDC.miniJit03+fencei
 Variant=self
-CacheType=DIC
+CacheType=IDC
 { 
-0:a0=P1:L1; 0:t0=instr:"j L1";
+0:a0=P1:L1; 0:t0=instr:"j Ltarget";
 0:a1=P1:L2; 0:t2=instr:"li s0, 3";
 1:s0=0;}
 P0           | P1           ;
@@ -11,9 +11,9 @@ fence w,w    |  j  L0       ;
 sw t0,0(a1)  | L0:          ;
              |  li s0, 1    ;
              |  j L3        ;
-             | L1:          ;
+             | Ltarget:     ;
              |  fence.i     ;
+             | L1:          ;
              |  li s0, 2    ;
              | L3:          ;
-exists (1:s0=2)
-(* Doesn't work with incoherent because fence.i doesn't order the jump *)
+~exists (1:s0=2)
