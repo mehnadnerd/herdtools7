@@ -80,6 +80,8 @@ type t =
 (* CacheType features *)
   | DIC
   | IDC
+(* RISC-V Ziccid extension: in-order instruction fetch + coherent I/D *)
+  | Ziccid
 (* Have cat interpreter to optimise generation of co's *)
   | CosOpt
 (* Test something *)
@@ -123,7 +125,7 @@ let tags =
     Precision.tags @ Fault.Handling.tags @
    ["CutOff"; "deps"; "morello"; "instances"; "noptebranch"; "pte2";
    "pte-squared"; "PhantomOnLoad"; "OptRfRMW"; "ConstrainedUnpredictable";
-    "exp"; "self"; "cos-opt"; "test"; "T[0-9][0-9]"; "asl"; "strict";
+    "exp"; "self"; "ziccid"; "cos-opt"; "test"; "T[0-9][0-9]"; "asl"; "strict";
     "warn"; "S128"; "ASLType+Warn";    "ASLType+Silence"; "ASLType+Check";
     "ASL+AArch64+UDF"; "telechat"; "OldSolver"; "oota";
     "pac"; "fpac"; "const-pac-field";
@@ -171,6 +173,7 @@ let parse s = match Misc.lowercase s with
 | "ifetch"|"self" -> Some Ifetch
 | "dic" -> None
 | "idc" -> None
+| "ziccid" -> Some Ziccid
 | "cos-opt" -> Some CosOpt
 | "test" -> Some Test
 | "asl" -> Some ASL
@@ -273,6 +276,7 @@ let pp = function
   | Ifetch -> "ifetch"
   | DIC -> "dic"
   | IDC -> "idc"
+  | Ziccid -> "ziccid"
   | CosOpt -> "cos-opt"
   | Test -> "test"
   | T n -> Printf.sprintf "T%02i" n

@@ -92,7 +92,7 @@ let M = anyM
 
 if variant "self" 
 let ir1 = [I];(iico_data|iico_ctrl)+;[M & Exp] (* Fetch-to-execute *)(* Only explicit load/store to allow value prediction *)
-and ir2 = if "DIC" then [I];po;[I] else 0   (* In-order-fetch *) (* Hypothesis is that removing this is sufficient to handle incoherent I$ *)
+and ir2 = if "Ziccid" then [I];po;[I] else 0   (* In-order-fetch, enabled by RISC-V Ziccid extension *)
 and ir3 = [M & Exp];fencerel(Fence.i);[I]   (* Effect of fence.i *)
 
 let ippo = 0
