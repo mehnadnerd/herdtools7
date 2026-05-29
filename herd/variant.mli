@@ -79,6 +79,8 @@ type t =
 (* CacheType features *)
   | DIC
   | IDC
+(* RISC-V Ziccid extension: in-order instruction fetch + coherent I/D *)
+  | Ziccid
 (* Have cat interpreter to optimise generation of co's *)
   | CosOpt
 (* Test something *)
